@@ -253,20 +253,30 @@
             document.getElementById("btn-fallback").style.display = "none";
             updateStatus("⏳ Đang khởi động máy ảnh...", "loading");
 
+            // 1. THỬ MỞ CAMERA SAU (Dành cho điện thoại)
             html5QrCode.start(
-                { facingMode: "environment" }, // Ưu tiên mở camera sau
-                {
-                    fps: 10,
-                    qrbox: { width: 200, height: 200 } // Vùng nhận diện QR bên trong khung
-                },
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 200, height: 200 } },
                 onScanSuccess
             ).then(() => {
                 updateStatus("📷 Camera đã bật. Đưa mã QR vào khung!", "success");
             }).catch((err) => {
-                console.log("Không thể tự động bật camera:", err);
-                // Nếu bị iOS chặn auto-play, hiển thị nút bấm để người dùng tự cấp quyền
-                document.getElementById("btn-fallback").style.display = "block";
-                updateStatus("⚠️ Trình duyệt chặn mở camera. Hãy bấm nút phía trên.", "error");
+                
+                // 2. NẾU LỖI (Do dùng Laptop không có cam sau), THỬ MỞ CAMERA TRƯỚC
+                console.log("Không tìm thấy cam sau, thử cam trước...");
+                html5QrCode.start(
+                    { facingMode: "user" }, 
+                    { fps: 10, qrbox: { width: 200, height: 200 } },
+                    onScanSuccess
+                ).then(() => {
+                    updateStatus("📷 Đang dùng Camera trước (Laptop/PC)", "success");
+                }).catch((err2) => {
+                    
+                    // 3. NẾU VẪN LỖI (Bị chặn quyền hoặc iOS khóa)
+                    console.log("Lỗi bật camera:", err2);
+                    document.getElementById("btn-fallback").style.display = "block";
+                    updateStatus("⚠️ Trình duyệt chặn mở camera. Hãy cấp quyền hoặc bấm nút phía trên.", "error");
+                });
             });
         }
 

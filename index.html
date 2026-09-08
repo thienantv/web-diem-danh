@@ -4,39 +4,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Điểm Danh QR</title>
+    <!-- Import Font Inter hiện đại -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; max-width: 500px; margin: auto; background-color: #f4f6f8; color: #333;}
-        .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
-        .header-title { text-align: center; margin: 0 0 10px 0; color: #1a73e8; font-size: 20px; }
-        .today-badge { background-color: #e8f0fe; color: #1a73e8; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 15px; border: 1px solid #d2e3fc; }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
-        .user-list { max-height: 380px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
-        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #f0f0f0; }
-        .user-item.active { background-color: #e6f4ea; }
-        .user-info { font-size: 15px; } .user-info strong { color: #1a73e8; }
-        .checkbox-custom { width: 26px; height: 26px; cursor: pointer; accent-color: #34a853; }
-        #status { padding: 10px; text-align: center; font-weight: 600; color: #2e7d32; font-size: 14px; }
+        :root {
+            --primary: #4f46e5;      /* Xanh Indigo hiện đại */
+            --primary-light: #e0e7ff;
+            --success: #10b981;      /* Xanh lá Emerald */
+            --success-light: #d1fae5;
+            --error: #ef4444;        /* Đỏ nhạt */
+            --error-light: #fee2e2;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            padding: 16px 12px;
+            max-width: 500px;
+            margin: auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Card Style */
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px 16px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            margin-bottom: 20px; 
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        /* Header */
+        .header-title { 
+            text-align: center; 
+            font-size: 22px; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            margin-bottom: 16px; 
+            letter-spacing: -0.5px;
+        }
+
+        .today-badge { 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-light); 
+            color: var(--primary); 
+            padding: 8px 16px; 
+            border-radius: 30px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            width: 100%;
+            margin-bottom: 16px; 
+        }
+        
+        .today-badge span { margin-left: 6px; }
+
+        /* Scanner Area */
+        #reader { 
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            border: 2px dashed var(--border) !important;
+            background: #fafafa;
+        }
+        /* Style lại các nút mặc định của thư viện QR */
+        #reader button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: opacity 0.2s;
+        }
+        #reader button:active { opacity: 0.8; }
+        #reader__dashboard_section_csr span { color: var(--text-muted) !important; font-size: 14px; }
+        #reader video { border-radius: 16px !important; object-fit: cover; }
+
+        /* Status Banner */
+        #status { 
+            margin-top: 16px;
+            padding: 12px; 
+            text-align: center; 
+            font-weight: 600; 
+            font-size: 14px; 
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .status-default { background: var(--border); color: var(--text-muted); }
+        .status-success { background: var(--success-light); color: var(--success); }
+        .status-error { background: var(--error-light); color: var(--error); }
+        .status-loading { background: var(--primary-light); color: var(--primary); }
+
+        /* User List */
+        .list-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+        .user-list { 
+            max-height: 400px; 
+            overflow-y: auto; 
+            padding-right: 4px;
+        }
+        /* Custom thanh cuộn */
+        .user-list::-webkit-scrollbar { width: 4px; }
+        .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .user-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 12px; 
+            margin-bottom: 8px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            transition: all 0.2s ease;
+        }
+        .user-item.active { 
+            background-color: #f8fafc; 
+            border-color: var(--success);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
+        }
+
+        /* Thông tin người dùng (Bao gồm Avatar) */
+        .user-info-wrapper { display: flex; align-items: center; gap: 12px; }
+        
+        .avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+        }
+        .user-item.active .avatar { background-color: var(--success-light); color: var(--success); }
+
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
+        .user-id { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+
+        /* CSS Custom Checkbox Hiện Đại */
+        .custom-checkbox-container {
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            width: 28px; height: 28px;
+        }
+        .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        
+        .checkmark {
+            position: absolute; top: 0; left: 0;
+            height: 28px; width: 28px;
+            background-color: var(--bg-color);
+            border: 2px solid #d1d5db;
+            border-radius: 50%; /* Checkbox hình tròn */
+            transition: all 0.2s ease;
+        }
+        
+        .custom-checkbox-container:hover input ~ .checkmark { background-color: #e5e7eb; }
+        .custom-checkbox-container input:checked ~ .checkmark {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+        
+        /* Dấu tích trắng (Checkmark icon) */
+        .checkmark:after {
+            content: ""; position: absolute; display: none;
+            left: 9px; top: 5px;
+            width: 6px; height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 class="header-title">Hệ Thống Điểm Danh QR</h2>
-        <div class="today-badge">📅 Ngày điểm danh: <span id="todayDisplay">Đang tải...</span></div>
+        <h2 class="header-title">Hệ Thống Điểm Danh</h2>
+        <div class="today-badge">📅 Hôm nay: <span id="todayDisplay">Đang tải...</span></div>
         <div id="reader"></div>
-        <div id="status">Đang kết nối hệ thống...</div>
+        <div id="status" class="status-default">⏳ Đang kết nối hệ thống...</div>
     </div>
+
     <div class="card">
-        <h3 style="margin-top:0; font-size: 16px;">Danh Sách Trạng Thái</h3>
-        <div class="user-list" id="userList"></div>
+        <h3 class="list-header">Danh Sách Trạng Thái</h3>
+        <div class="user-list" id="userList">
+            <!-- Dữ liệu sẽ được chèn vào đây -->
+        </div>
     </div>
+
     <script>
-        // TRỌNG TÂM: DÁN LINK BẠN COPY Ở GIAI ĐOẠN 2 VÀO GIỮA 2 DẤU NGOẶC KÉP BÊN DƯỚI
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQlkE9C6U5VlpCpxrDvD6nybk5cYeB-FC59YVg5UZgrkUvUb0RmO6ir5JuqYZz_0I/exec"; 
         
         let usersData = [];
         let todayDateStr = "";
+
+        // Hàm lấy chữ cái đầu của Tên để làm Avatar
+        function getInitials(name) {
+            if (!name) return "?";
+            let parts = name.trim().split(" ");
+            let lastName = parts[parts.length - 1];
+            return lastName.charAt(0).toUpperCase();
+        }
+
+        // Hàm cập nhật trạng thái UI (Màu sắc Banner)
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById("status");
+            statusEl.innerText = message;
+            statusEl.className = ""; // Reset class
+            if(type === 'success') statusEl.classList.add('status-success');
+            else if(type === 'error') statusEl.classList.add('status-error');
+            else if(type === 'loading') statusEl.classList.add('status-loading');
+            else statusEl.classList.add('status-default');
+        }
 
         function loadInitialData() {
             fetch(SCRIPT_URL).then(res => res.json()).then(data => {
@@ -44,19 +240,39 @@
                 usersData = data.users || [];
                 document.getElementById("todayDisplay").innerText = todayDateStr;
                 renderList();
-                document.getElementById("status").innerText = "Sẵn sàng quét mã QR!";
-            }).catch(err => { document.getElementById("status").innerText = "Lỗi tải dữ liệu!"; });
+                updateStatus("📷 Sẵn sàng quét mã QR!", "default");
+            }).catch(err => { 
+                updateStatus("⚠️ Lỗi tải dữ liệu. Vui lòng tải lại trang!", "error"); 
+            });
         }
 
         function renderList() {
             const container = document.getElementById("userList");
             container.innerHTML = "";
+            
+            if (usersData.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 14px;">Chưa có dữ liệu nhân sự</div>`;
+                return;
+            }
+
             usersData.forEach(user => {
                 const div = document.createElement("div");
                 div.className = `user-item ${user.checked ? 'active' : ''}`;
                 div.id = `user-${user.id}`;
-                div.innerHTML = `<div class="user-info"><strong>${user.id}</strong> - ${user.name}</div>
-                                 <input type="checkbox" class="checkbox-custom" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">`;
+                
+                div.innerHTML = `
+                    <div class="user-info-wrapper">
+                        <div class="avatar">${getInitials(user.name)}</div>
+                        <div class="user-info">
+                            <span class="user-name">${user.name}</span>
+                            <span class="user-id">ID: ${user.id}</span>
+                        </div>
+                    </div>
+                    <label class="custom-checkbox-container">
+                        <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
+                        <span class="checkmark"></span>
+                    </label>
+                `;
                 container.appendChild(div);
             });
         }
@@ -64,28 +280,53 @@
         function onScanSuccess(decodedText) {
             let user = usersData.find(u => u.id === decodedText);
             if (user) {
-                if (user.checked) { document.getElementById("status").innerText = `Đã điểm danh: ${decodedText}!`; return; }
+                if (user.checked) { 
+                    updateStatus(`Mã [${decodedText}] đã được điểm danh!`, "loading"); 
+                    return; 
+                }
                 user.checked = true;
                 renderList();
                 document.getElementById(`user-${user.id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
                 sendDataToSheet(decodedText, true);
-            } else { document.getElementById("status").innerText = "❌ Mã không hợp lệ: " + decodedText; }
+            } else { 
+                updateStatus(`❌ Mã không hợp lệ: ${decodedText}`, "error"); 
+            }
         }
 
         function sendDataToSheet(qrCode, isChecked) {
-            document.getElementById("status").innerText = `Đang xử lý: ${qrCode}...`;
-            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ qrCode: qrCode, checked: isChecked }) })
-            .then(() => { document.getElementById("status").innerText = `✅ Xong: ${qrCode}`; });
+            updateStatus(`⏳ Đang ghi nhận: ${qrCode}...`, "loading");
+            fetch(SCRIPT_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ qrCode: qrCode, checked: isChecked }) 
+            })
+            .then(() => { 
+                updateStatus(`✅ Điểm danh thành công: ${qrCode}`, "success"); 
+            });
         }
 
         function manualCheck(qrCode, isChecked) {
             let user = usersData.find(u => u.id === qrCode);
-            if (user) user.checked = isChecked;
+            if (user) {
+                user.checked = isChecked;
+                // Tô màu lại dòng khi tích tay
+                const userRow = document.getElementById(`user-${qrCode}`);
+                if(isChecked) userRow.classList.add('active');
+                else userRow.classList.remove('active');
+            }
             sendDataToSheet(qrCode, isChecked);
         }
 
-        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 220 }, rememberLastUsedCamera: true });
+        // Cấu hình máy quét QR
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 }, 
+            rememberLastUsedCamera: true,
+            showTorchButtonIfSupported: true // Hiện nút bật đèn Flash nếu điện thoại hỗ trợ
+        });
         html5QrcodeScanner.render(onScanSuccess);
+        
         loadInitialData();
     </script>
 </body>

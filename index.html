@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Điểm Danh QR</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; max-width: 500px; margin: auto; background-color: #f4f6f8; color: #333;}
+        .card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        .header-title { text-align: center; margin: 0 0 10px 0; color: #1a73e8; font-size: 20px; }
+        .today-badge { background-color: #e8f0fe; color: #1a73e8; padding: 8px 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 15px; border: 1px solid #d2e3fc; }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+        .user-list { max-height: 380px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #f0f0f0; }
+        .user-item.active { background-color: #e6f4ea; }
+        .user-info { font-size: 15px; } .user-info strong { color: #1a73e8; }
+        .checkbox-custom { width: 26px; height: 26px; cursor: pointer; accent-color: #34a853; }
+        #status { padding: 10px; text-align: center; font-weight: 600; color: #2e7d32; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 class="header-title">Hệ Thống Điểm Danh QR</h2>
+        <div class="today-badge">📅 Ngày điểm danh: <span id="todayDisplay">Đang tải...</span></div>
+        <div id="reader"></div>
+        <div id="status">Đang kết nối hệ thống...</div>
+    </div>
+    <div class="card">
+        <h3 style="margin-top:0; font-size: 16px;">Danh Sách Trạng Thái</h3>
+        <div class="user-list" id="userList"></div>
+    </div>
+    <script>
+        // TRỌNG TÂM: DÁN LINK BẠN COPY Ở GIAI ĐOẠN 2 VÀO GIỮA 2 DẤU NGOẶC KÉP BÊN DƯỚI
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQlkE9C6U5VlpCpxrDvD6nybk5cYeB-FC59YVg5UZgrkUvUb0RmO6ir5JuqYZz_0I/exec"; 
+        
+        let usersData = [];
+        let todayDateStr = "";
+
+        function loadInitialData() {
+            fetch(SCRIPT_URL).then(res => res.json()).then(data => {
+                todayDateStr = data.today;
+                usersData = data.users || [];
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                renderList();
+                document.getElementById("status").innerText = "Sẵn sàng quét mã QR!";
+            }).catch(err => { document.getElementById("status").innerText = "Lỗi tải dữ liệu!"; });
+        }
+
+        function renderList() {
+            const container = document.getElementById("userList");
+            container.innerHTML = "";
+            usersData.forEach(user => {
+                const div = document.createElement("div");
+                div.className = `user-item ${user.checked ? 'active' : ''}`;
+                div.id = `user-${user.id}`;
+                div.innerHTML = `<div class="user-info"><strong>${user.id}</strong> - ${user.name}</div>
+                                 <input type="checkbox" class="checkbox-custom" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">`;
+                container.appendChild(div);
+            });
+        }
+
+        function onScanSuccess(decodedText) {
+            let user = usersData.find(u => u.id === decodedText);
+            if (user) {
+                if (user.checked) { document.getElementById("status").innerText = `Đã điểm danh: ${decodedText}!`; return; }
+                user.checked = true;
+                renderList();
+                document.getElementById(`user-${user.id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sendDataToSheet(decodedText, true);
+            } else { document.getElementById("status").innerText = "❌ Mã không hợp lệ: " + decodedText; }
+        }
+
+        function sendDataToSheet(qrCode, isChecked) {
+            document.getElementById("status").innerText = `Đang xử lý: ${qrCode}...`;
+            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ qrCode: qrCode, checked: isChecked }) })
+            .then(() => { document.getElementById("status").innerText = `✅ Xong: ${qrCode}`; });
+        }
+
+        function manualCheck(qrCode, isChecked) {
+            let user = usersData.find(u => u.id === qrCode);
+            if (user) user.checked = isChecked;
+            sendDataToSheet(qrCode, isChecked);
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 220 }, rememberLastUsedCamera: true });
+        html5QrcodeScanner.render(onScanSuccess);
+        loadInitialData();
+    </script>
+</body>
+</html>

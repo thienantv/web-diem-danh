@@ -245,43 +245,64 @@
         }
 
         // ==========================================
-        // HỆ THỐNG CAMERA TỰ ĐỘNG (DÙNG CORE API)
+        // HỆ THỐNG CAMERA TỰ ĐỘNG (PHIÊN BẢN VƯỢT LỖI MÀN HÌNH ĐEN)
         // ==========================================
         const html5QrCode = new Html5Qrcode("reader");
 
         function startCamera() {
             document.getElementById("btn-fallback").style.display = "none";
-            updateStatus("⏳ Đang khởi động máy ảnh...", "loading");
+            updateStatus("⏳ Đang quét tìm thiết bị camera...", "loading");
 
-            // 1. THỬ MỞ CAMERA SAU (Dành cho điện thoại)
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 200, height: 200 } },
-                onScanSuccess
-            ).then(() => {
-                updateStatus("📷 Camera đã bật. Đưa mã QR vào khung!", "success");
-            }).catch((err) => {
+            // BƯỚC 1: Lấy danh sách toàn bộ camera vật lý đang có trên máy
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    
+                    // BƯỚC 2: Ưu tiên tìm Camera Sau (back / environment)
+                    let cameraId = devices[0].id; // Mặc định lấy cam đầu tiên (nếu dùng Laptop)
+                    
+                    for (let i = 0; i < devices.length; i++) {
+                        let camName = devices[i].label.toLowerCase();
+                        // Dò tên camera để tìm camera sau
+                        if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) {
+                            cameraId = devices[i].id;
+                            break; // Tìm thấy thì dừng
+                        }
+                    }
+
+                    // BƯỚC 3: Kích hoạt chính xác ID của camera đã chọn
+                    html5QrCode.start(
+                        cameraId, 
+                        { fps: 10, qrbox: { width: 200, height: 200 } },
+                        onScanSuccess
+                    ).then(() => {
+                        updateStatus("📷 Camera đã bật. Đưa mã QR vào khung!", "success");
+                    }).catch(err => {
+                        console.log("Lỗi bật cam ID:", err);
+                        showFallback();
+                    });
+
+                } else {
+                    updateStatus("⚠️ Máy của bạn không có thiết bị camera!", "error");
+                }
+            }).catch(err => {
+                console.log("Lỗi lấy danh sách cam:", err);
                 
-                // 2. NẾU LỖI (Do dùng Laptop không có cam sau), THỬ MỞ CAMERA TRƯỚC
-                console.log("Không tìm thấy cam sau, thử cam trước...");
+                // Phương án dự phòng cuối cùng nếu hàm quét bị chặn
                 html5QrCode.start(
-                    { facingMode: "user" }, 
+                    { facingMode: "environment" }, 
                     { fps: 10, qrbox: { width: 200, height: 200 } },
                     onScanSuccess
-                ).then(() => {
-                    updateStatus("📷 Đang dùng Camera trước (Laptop/PC)", "success");
-                }).catch((err2) => {
-                    
-                    // 3. NẾU VẪN LỖI (Bị chặn quyền hoặc iOS khóa)
-                    console.log("Lỗi bật camera:", err2);
-                    document.getElementById("btn-fallback").style.display = "block";
-                    updateStatus("⚠️ Trình duyệt chặn mở camera. Hãy cấp quyền hoặc bấm nút phía trên.", "error");
-                });
+                ).catch(err2 => showFallback());
             });
         }
 
+        function showFallback() {
+            document.getElementById("btn-fallback").style.display = "block";
+            updateStatus("⚠️ Camera bị treo. Hãy bấm nút phía trên để thử lại.", "error");
+        }
+
         function onScanSuccess(decodedText) {
-            if (isProcessing) return; // Nếu đang xử lý mã trước đó thì bỏ qua
+            if (isProcessing) return; 
 
             let user = usersData.find(u => u.id === decodedText);
             if (user) {
@@ -290,20 +311,17 @@
                     return; 
                 }
                 
-                // Khóa hệ thống 1.5 giây để tránh quét 1 mã liên tục nhiều lần
                 isProcessing = true;
-                
                 user.checked = true;
                 renderList();
                 document.getElementById(`user-${user.id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
                 sendDataToSheet(decodedText, true);
 
-                setTimeout(() => { isProcessing = false; }, 1500); // Mở khóa sau 1.5s
+                setTimeout(() => { isProcessing = false; }, 1500); 
             } else { 
                 updateStatus(`❌ Mã không hợp lệ: ${decodedText}`, "error"); 
             }
         }
-        // ==========================================
 
         function sendDataToSheet(qrCode, isChecked) {
             updateStatus(`⏳ Đang ghi nhận: ${qrCode}...`, "loading");
@@ -329,7 +347,7 @@
             sendDataToSheet(qrCode, isChecked);
         }
 
-        // Bắt đầu quy trình: Load dữ liệu -> Tự động bật cam
+        // Khởi động
         loadInitialData();
     </script>
 </body>

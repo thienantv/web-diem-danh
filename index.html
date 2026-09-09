@@ -3,161 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Điểm Danh QR</title>
-    <!-- Import Font Inter hiện đại -->
+    <title>Điểm Danh QR Đa Năng</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-light: #e0e7ff;
-            --success: #10b981;
-            --success-light: #d1fae5;
-            --error: #ef4444;
-            --error-light: #fee2e2;
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --primary: #4f46e5; --primary-light: #e0e7ff;
+            --success: #10b981; --success-light: #d1fae5;
+            --error: #ef4444; --error-light: #fee2e2;
+            --bg-color: #f3f4f6; --card-bg: #ffffff;
+            --text-main: #111827; --text-muted: #6b7280; --border: #e5e7eb;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 16px 12px; max-width: 500px; margin: auto; -webkit-font-smoothing: antialiased; }
         
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-main);
-            padding: 16px 12px;
-            max-width: 500px;
-            margin: auto;
-            -webkit-font-smoothing: antialiased;
-        }
+        .card { background: var(--card-bg); padding: 20px 16px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
+        .header-title { text-align: center; font-size: 22px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; letter-spacing: -0.5px; }
 
-        .card { 
-            background: var(--card-bg); 
-            padding: 20px 16px; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
-            margin-bottom: 20px; 
-            border: 1px solid rgba(0,0,0,0.02);
+        /* ===== CSS THANH CHỌN DANH MỤC ===== */
+        .activity-selector { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .activity-selector label { font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .activity-selector select { 
+            width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); 
+            background-color: var(--card-bg); font-size: 16px; font-weight: 600; color: var(--primary); 
+            outline: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
+        .activity-selector select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        
+        .today-badge { display: flex; align-items: center; justify-content: center; background-color: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 14px; width: 100%; margin-bottom: 20px; }
+        
+        .scanner-container { display: flex; justify-content: center; align-items: center; margin-bottom: 16px; position: relative; }
+        #reader { width: 260px; height: 260px; border-radius: 24px; overflow: hidden; border: 4px solid var(--primary-light); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15); background: #000; position: relative; }
+        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; border-radius: 20px !important; }
+        #btn-fallback { position: absolute; z-index: 10; background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; }
 
-        .header-title { 
-            text-align: center; font-size: 22px; font-weight: 700; 
-            color: var(--text-main); margin-bottom: 16px; letter-spacing: -0.5px;
-        }
-
-        .today-badge { 
-            display: flex; align-items: center; justify-content: center;
-            background-color: var(--primary-light); color: var(--primary); 
-            padding: 8px 16px; border-radius: 30px; font-weight: 600; 
-            font-size: 14px; width: 100%; margin-bottom: 20px; 
-        }
-
-        /* ===== CSS CAMERA VUÔNG ===== */
-        .scanner-container {
-            display: flex; justify-content: center; align-items: center;
-            margin-bottom: 16px; position: relative;
-        }
-
-        #reader { 
-            width: 260px; height: 260px; border-radius: 24px; 
-            overflow: hidden; border: 4px solid var(--primary-light);
-            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
-            background: #000; position: relative;
-        }
-
-        #reader video { 
-            object-fit: cover !important; width: 100% !important; 
-            height: 100% !important; border-radius: 20px !important;
-        }
-
-        #btn-fallback {
-            position: absolute; z-index: 10; background: var(--primary);
-            color: white; border: none; padding: 12px 20px; border-radius: 12px;
-            font-weight: 600; font-size: 14px; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); display: none; 
-        }
-
-        #status { 
-            padding: 12px; text-align: center; font-weight: 600; 
-            font-size: 14px; border-radius: 12px; transition: all 0.3s ease;
-        }
+        #status { padding: 12px; text-align: center; font-weight: 600; font-size: 14px; border-radius: 12px; transition: all 0.3s ease; }
         .status-default { background: var(--border); color: var(--text-muted); }
         .status-success { background: var(--success-light); color: var(--success); }
         .status-error { background: var(--error-light); color: var(--error); }
         .status-loading { background: var(--primary-light); color: var(--primary); }
 
-        /* ===== DANH SÁCH & NÚT THU GỌN ===== */
-        .list-header-wrapper {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-        }
+        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .list-header { font-size: 18px; font-weight: 700; margin: 0; }
+        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
         
-        .btn-toggle {
-            background-color: var(--primary-light); color: var(--primary);
-            border: none; padding: 6px 14px; border-radius: 20px;
-            font-weight: 600; font-size: 13px; cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-toggle:active { transform: scale(0.95); }
-
-        .user-list { 
-            max-height: 400px; overflow-y: auto; padding-right: 4px; position: relative; 
-        }
+        .user-list { max-height: 400px; overflow-y: auto; padding-right: 4px; position: relative; }
         .user-list::-webkit-scrollbar { width: 4px; }
         .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        .user-item { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 12px; margin-bottom: 8px; border-radius: 14px;
-            border: 1px solid var(--border); background: var(--card-bg); transition: all 0.3s ease;
-            animation: fadeIn 0.4s ease-out; /* Hiệu ứng hiện mượt mà */
-        }
+        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; border-radius: 14px; border: 1px solid var(--border); background: var(--card-bg); animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .user-item.active { 
-            background-color: #f8fafc; border-color: var(--success);
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
-        }
+        .user-item.active { background-color: #f8fafc; border-color: var(--success); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05); }
 
         .user-info-wrapper { display: flex; align-items: center; gap: 12px; }
-        .avatar {
-            width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-light);
-            color: var(--primary); display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 16px;
-        }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
         .user-item.active .avatar { background-color: var(--success-light); color: var(--success); }
-
         .user-info { display: flex; flex-direction: column; }
         .user-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
         .user-id { font-size: 12px; font-weight: 500; color: var(--text-muted); }
 
-        /* Custom Checkbox */
-        .custom-checkbox-container {
-            position: relative; cursor: pointer; font-size: 22px; user-select: none; width: 28px; height: 28px;
-        }
+        .custom-checkbox-container { position: relative; cursor: pointer; font-size: 22px; user-select: none; width: 28px; height: 28px; }
         .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-        .checkmark {
-            position: absolute; top: 0; left: 0; height: 28px; width: 28px;
-            background-color: var(--bg-color); border: 2px solid #d1d5db; border-radius: 50%; transition: all 0.2s ease;
-        }
-        .custom-checkbox-container:hover input ~ .checkmark { background-color: #e5e7eb; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 28px; width: 28px; background-color: var(--bg-color); border: 2px solid #d1d5db; border-radius: 50%; transition: all 0.2s ease; }
         .custom-checkbox-container input:checked ~ .checkmark { background-color: var(--success); border-color: var(--success); }
-        .checkmark:after {
-            content: ""; position: absolute; display: none; left: 9px; top: 5px;
-            width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
-        }
+        .checkmark:after { content: ""; position: absolute; display: none; left: 9px; top: 5px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 class="header-title">Hệ Thống Điểm Danh</h2>
-        <div class="today-badge">📅 Hôm nay: &nbsp;<span id="todayDisplay">Đang tải...</span></div>
         
-        <!-- Khung Camera Vuông -->
+        <!-- === MỚI: Thanh chọn danh mục === -->
+        <div class="activity-selector">
+            <label for="sheetSelect">Chọn danh mục / sự kiện:</label>
+            <select id="sheetSelect" onchange="onSheetChange()">
+                <option>Đang tải danh sách...</option>
+            </select>
+        </div>
+        <!-- ============================== -->
+
+        <div class="today-badge">📅 Hôm nay: &nbsp;<span id="todayDisplay">...</span></div>
+        
         <div class="scanner-container">
             <div id="reader"></div>
             <button id="btn-fallback" onclick="startCamera()">📷 Chạm để bật Camera</button>
@@ -167,94 +95,96 @@
     </div>
 
     <div class="card">
-        <!-- Khung Tiêu đề & Nút Thu Gọn -->
         <div class="list-header-wrapper">
             <h3 class="list-header">Danh Sách Trạng Thái</h3>
             <button id="btnToggleList" class="btn-toggle" onclick="toggleList()">Thu gọn</button>
         </div>
-        
-        <div class="user-list" id="userList">
-            <!-- Dữ liệu sẽ được chèn vào đây -->
-        </div>
+        <div class="user-list" id="userList"></div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQlkE9C6U5VlpCpxrDvD6nybk5cYeB-FC59YVg5UZgrkUvUb0RmO6ir5JuqYZz_0I/exec"; 
         
-        let usersData = [];
+        let globalData = {}; // Chứa toàn bộ dữ liệu của tất cả các Sheets
+        let currentSheetName = ""; // Tên sheet đang được chọn
+        let usersData = []; // Dữ liệu của sheet hiện tại
+        
         let todayDateStr = "";
         let isProcessing = false; 
-        
-        // Cấu hình chế độ Thu gọn / Mở rộng
         let isExpanded = true; 
-        let lastScannedId = null; // Ghi nhớ ID người vừa điểm danh cuối cùng
+        let lastScannedId = null; 
 
-        function getInitials(name) {
-            if (!name) return "?";
-            let parts = name.trim().split(" ");
-            return parts[parts.length - 1].charAt(0).toUpperCase();
-        }
+        function getInitials(name) { return name ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?"; }
 
         function updateStatus(message, type) {
             const statusEl = document.getElementById("status");
-            statusEl.innerText = message;
-            statusEl.className = ""; 
+            statusEl.innerText = message; statusEl.className = ""; 
             if(type === 'success') statusEl.classList.add('status-success');
             else if(type === 'error') statusEl.classList.add('status-error');
             else if(type === 'loading') statusEl.classList.add('status-loading');
             else statusEl.classList.add('status-default');
         }
 
-        // HÀM CHUYỂN ĐỔI CHẾ ĐỘ THU GỌN / MỞ RỘNG
         function toggleList() {
-            isExpanded = !isExpanded; // Đảo ngược trạng thái
-            const btn = document.getElementById("btnToggleList");
-            btn.innerText = isExpanded ? "Thu gọn" : "Mở rộng";
+            isExpanded = !isExpanded;
+            document.getElementById("btnToggleList").innerText = isExpanded ? "Thu gọn" : "Mở rộng";
             renderList();
+        }
+
+        // === MỚI: Xử lý khi đổi danh mục ===
+        function onSheetChange() {
+            const select = document.getElementById("sheetSelect");
+            currentSheetName = select.value;
+            usersData = globalData[currentSheetName] || [];
+            lastScannedId = null; // Xóa trí nhớ người quét khi đổi danh mục
+            renderList();
+            updateStatus(`Đã chuyển sang: ${currentSheetName}`, "default");
         }
 
         function loadInitialData() {
             fetch(SCRIPT_URL).then(res => res.json()).then(data => {
                 todayDateStr = data.today;
-                usersData = data.users || [];
-                document.getElementById("todayDisplay").innerText = todayDateStr;
-                renderList();
+                globalData = data.data; // Lưu tổng dữ liệu
                 
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                
+                // Đổ dữ liệu tên các Sheet vào thẻ <select>
+                const select = document.getElementById("sheetSelect");
+                select.innerHTML = "";
+                data.sheetNames.forEach(sheet => {
+                    const opt = document.createElement("option");
+                    opt.value = sheet; opt.innerText = sheet;
+                    select.appendChild(opt);
+                });
+
+                // Chọn sheet đầu tiên làm mặc định
+                if (data.sheetNames.length > 0) {
+                    currentSheetName = data.sheetNames[0];
+                    usersData = globalData[currentSheetName] || [];
+                }
+
+                renderList();
                 startCamera();
                 
-            }).catch(err => { 
-                updateStatus("⚠️ Lỗi tải dữ liệu. Vui lòng tải lại trang!", "error"); 
-            });
+            }).catch(err => { updateStatus("⚠️ Lỗi tải dữ liệu. Vui lòng tải lại trang!", "error"); });
         }
 
         function renderList() {
             const container = document.getElementById("userList");
             container.innerHTML = "";
-            
-            // Lọc dữ liệu dựa theo chế độ Mở rộng / Thu gọn
             let displayUsers = usersData;
             
             if (!isExpanded) {
-                if (lastScannedId) {
-                    // Nếu thu gọn: Chỉ hiển thị đúng người vừa quét cuối cùng
-                    displayUsers = usersData.filter(u => u.id === lastScannedId);
-                } else {
-                    // Nếu chưa quét ai mà bấm thu gọn thì mảng trống
-                    displayUsers = [];
-                }
+                if (lastScannedId) displayUsers = usersData.filter(u => u.id === lastScannedId);
+                else displayUsers = [];
             }
             
-            // Xử lý giao diện trống
             if (displayUsers.length === 0) {
-                if (!isExpanded) {
-                    container.innerHTML = `<div style="text-align:center; padding: 25px 10px; color: var(--text-muted); font-size: 14px; line-height: 1.6;">✨ Đang ở chế độ thu gọn.<br>Người vừa quét sẽ hiển thị tại đây!</div>`;
-                } else {
-                    container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 14px;">Chưa có dữ liệu nhân sự</div>`;
-                }
+                if (!isExpanded) container.innerHTML = `<div style="text-align:center; padding: 25px 10px; color: var(--text-muted); font-size: 14px; line-height: 1.6;">✨ Đang ở chế độ thu gọn.<br>Người vừa quét sẽ hiển thị tại đây!</div>`;
+                else container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 14px;">Chưa có danh sách trong danh mục này</div>`;
                 return;
             }
 
-            // In danh sách ra HTML
             displayUsers.forEach(user => {
                 const div = document.createElement("div");
                 div.className = `user-item ${user.checked ? 'active' : ''}`;
@@ -262,23 +192,16 @@
                 div.innerHTML = `
                     <div class="user-info-wrapper">
                         <div class="avatar">${getInitials(user.name)}</div>
-                        <div class="user-info">
-                            <span class="user-name">${user.name}</span>
-                            <span class="user-id">ID: ${user.id}</span>
-                        </div>
+                        <div class="user-info"><span class="user-name">${user.name}</span><span class="user-id">ID: ${user.id}</span></div>
                     </div>
                     <label class="custom-checkbox-container">
                         <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
                         <span class="checkmark"></span>
-                    </label>
-                `;
+                    </label>`;
                 container.appendChild(div);
             });
         }
 
-        // ==========================================
-        // HỆ THỐNG CAMERA TỰ ĐỘNG
-        // ==========================================
         const html5QrCode = new Html5Qrcode("reader");
 
         function startCamera() {
@@ -290,33 +213,15 @@
                     let cameraId = devices[0].id; 
                     for (let i = 0; i < devices.length; i++) {
                         let camName = devices[i].label.toLowerCase();
-                        if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) {
-                            cameraId = devices[i].id;
-                            break; 
-                        }
+                        if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) { cameraId = devices[i].id; break; }
                     }
-
-                    html5QrCode.start(
-                        cameraId, 
-                        { fps: 10, qrbox: { width: 200, height: 200 } },
-                        onScanSuccess
-                    ).then(() => {
-                        updateStatus("📷 Camera đã bật. Đưa mã QR vào khung!", "success");
-                    }).catch(err => {
-                        console.log("Lỗi bật cam ID:", err);
-                        showFallback();
-                    });
-
-                } else {
-                    updateStatus("⚠️ Máy của bạn không có thiết bị camera!", "error");
-                }
+                    html5QrCode.start(cameraId, { fps: 10, qrbox: { width: 200, height: 200 } }, onScanSuccess)
+                    .then(() => updateStatus("📷 Sẵn sàng điểm danh!", "success"))
+                    .catch(err => { console.log(err); showFallback(); });
+                } else updateStatus("⚠️ Không tìm thấy camera!", "error");
             }).catch(err => {
-                console.log("Lỗi lấy danh sách cam:", err);
-                html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    { fps: 10, qrbox: { width: 200, height: 200 } },
-                    onScanSuccess
-                ).catch(err2 => showFallback());
+                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 200, height: 200 } }, onScanSuccess)
+                .catch(err2 => showFallback());
             });
         }
 
@@ -330,56 +235,42 @@
 
             let user = usersData.find(u => u.id === decodedText);
             if (user) {
-                if (user.checked) { 
-                    updateStatus(`Mã [${decodedText}] đã được điểm danh!`, "loading"); 
-                    return; 
-                }
+                if (user.checked) { updateStatus(`Mã [${decodedText}] đã điểm danh trong mục này!`, "loading"); return; }
                 
                 isProcessing = true;
                 user.checked = true;
-                lastScannedId = decodedText; // Ghi nhớ người vừa quét
+                lastScannedId = decodedText; 
+                renderList(); 
                 
-                renderList(); // Render lại giao diện (Nó sẽ tự nhận diện đang thu gọn hay mở rộng)
-                
-                // Chỉ cuộn trang khi đang ở chế độ MỞ RỘNG
                 if (isExpanded) {
-                    const listContainer = document.getElementById("userList");
                     const targetRow = document.getElementById(`user-${user.id}`);
-                    if (listContainer && targetRow) {
-                        listContainer.scrollTo({
-                            top: targetRow.offsetTop - 150,
-                            behavior: 'smooth'
-                        });
-                    }
+                    if (targetRow) document.getElementById("userList").scrollTo({ top: targetRow.offsetTop - 150, behavior: 'smooth' });
                 }
 
                 sendDataToSheet(decodedText, true);
                 setTimeout(() => { isProcessing = false; }, 1500); 
             } else { 
-                updateStatus(`❌ Mã không hợp lệ: ${decodedText}`, "error"); 
+                updateStatus(`❌ Mã [${decodedText}] không có trong danh mục [${currentSheetName}]`, "error"); 
             }
         }
 
         function sendDataToSheet(qrCode, isChecked) {
             updateStatus(`⏳ Đang ghi nhận: ${qrCode}...`, "loading");
             fetch(SCRIPT_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify({ qrCode: qrCode, checked: isChecked }) 
-            })
-            .then(() => { 
-                updateStatus(`✅ Điểm danh thành công: ${qrCode}`, "success"); 
-            });
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ 
+                    qrCode: qrCode, 
+                    checked: isChecked,
+                    sheetName: currentSheetName // === MỚI: Gửi kèm tên danh mục ===
+                }) 
+            }).then(() => updateStatus(`✅ Điểm danh thành công: ${qrCode}`, "success"));
         }
 
         function manualCheck(qrCode, isChecked) {
             let user = usersData.find(u => u.id === qrCode);
             if (user) {
                 user.checked = isChecked;
-                lastScannedId = qrCode; // Kể cả khi tích tay cũng coi là người vừa tương tác
-                
-                // Nếu đang thu gọn mà lỡ tay bỏ tích, ta vẫn để hiển thị tên người đó để họ có thể tích lại
+                lastScannedId = qrCode; 
                 renderList();
             }
             sendDataToSheet(qrCode, isChecked);

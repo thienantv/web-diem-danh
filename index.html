@@ -17,72 +17,93 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 16px 12px; max-width: 500px; margin: auto; -webkit-font-smoothing: antialiased; }
         
-        .card { background: var(--card-bg); padding: 20px 16px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
-        .header-title { text-align: center; font-size: 22px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; letter-spacing: -0.5px; }
+        /* CẬP NHẬT 1: Khóa trang web vừa đúng 100% chiều cao màn hình (100dvh) */
+        body { 
+            background-color: var(--bg-color); color: var(--text-main); 
+            padding: 12px; max-width: 500px; margin: auto; 
+            -webkit-font-smoothing: antialiased;
+            height: 100dvh; 
+            display: flex; flex-direction: column; 
+            overflow: hidden; /* Khóa không cho cuộn toàn trang */
+        }
+        
+        /* CẬP NHẬT 2: Ép các khung thẻ tự động co giãn cho vừa màn hình */
+        .card { 
+            background: var(--card-bg); padding: 12px; 
+            border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            border: 1px solid rgba(0,0,0,0.02);
+            display: flex; flex-direction: column;
+        }
 
-        /* ===== CSS THANH CHỌN DANH MỤC ===== */
-        .activity-selector { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .activity-selector label { font-size: 14px; font-weight: 600; color: var(--text-main); }
+        /* Thẻ 1 (Camera): Giữ nguyên chiều cao theo nội dung */
+        #card-camera { flex-shrink: 0; margin-bottom: 12px; }
+
+        /* Thẻ 2 (Danh sách): Kéo giãn lấp đầy phần trống còn lại */
+        #card-list { flex: 1; min-height: 0; margin-bottom: 0; }
+
+        .header-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
+
+        .activity-selector { margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .activity-selector label { font-size: 13px; font-weight: 600; color: var(--text-main); }
         .activity-selector select { 
-            width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); 
-            background-color: var(--card-bg); font-size: 16px; font-weight: 600; color: var(--primary); 
+            width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); 
+            background-color: var(--card-bg); font-size: 14px; font-weight: 600; color: var(--primary); 
             outline: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .activity-selector select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
         
-        .today-badge { display: flex; align-items: center; justify-content: center; background-color: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 30px; font-weight: 600; font-size: 14px; width: 100%; margin-bottom: 20px; }
+        .today-badge { display: flex; align-items: center; justify-content: center; background-color: var(--primary-light); color: var(--primary); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 13px; width: 100%; margin-bottom: 12px; }
         
-        .scanner-container { display: flex; justify-content: center; align-items: center; margin-bottom: 16px; position: relative; }
-        #reader { width: 260px; height: 260px; border-radius: 24px; overflow: hidden; border: 4px solid var(--primary-light); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15); background: #000; position: relative; }
-        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; border-radius: 20px !important; }
-        #btn-fallback { position: absolute; z-index: 10; background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; }
+        .scanner-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative; }
+        
+        /* CẬP NHẬT 3: Thu nhỏ khung camera xuống 200px để không choán chỗ */
+        #reader { width: 200px; height: 200px; border-radius: 20px; overflow: hidden; border: 4px solid var(--primary-light); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15); background: #000; position: relative; }
+        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; border-radius: 16px !important; }
+        #btn-fallback { position: absolute; z-index: 10; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: none; }
 
-        #status { padding: 12px; text-align: center; font-weight: 600; font-size: 14px; border-radius: 12px; transition: all 0.3s ease; }
+        #status { padding: 10px; text-align: center; font-weight: 600; font-size: 13px; border-radius: 10px; transition: all 0.3s ease; margin-bottom: 4px; }
         .status-default { background: var(--border); color: var(--text-muted); }
         .status-success { background: var(--success-light); color: var(--success); }
         .status-error { background: var(--error-light); color: var(--error); }
         .status-loading { background: var(--primary-light); color: var(--primary); }
 
-        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .list-header { font-size: 18px; font-weight: 700; margin: 0; }
-        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
+        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .list-header { font-size: 16px; font-weight: 700; margin: 0; }
+        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s ease; }
         
-        .user-list { max-height: 400px; overflow-y: auto; padding-right: 4px; position: relative; }
+        /* CẬP NHẬT 4: Danh sách tự động giãn cho vừa khoảng trống */
+        .user-list { flex: 1; overflow-y: auto; padding-right: 4px; position: relative; }
         .user-list::-webkit-scrollbar { width: 4px; }
         .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; border-radius: 14px; border: 1px solid var(--border); background: var(--card-bg); animation: fadeIn 0.4s ease-out; }
+        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; margin-bottom: 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .user-item.active { background-color: #f8fafc; border-color: var(--success); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05); }
 
-        .user-info-wrapper { display: flex; align-items: center; gap: 12px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+        .user-info-wrapper { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
         .user-item.active .avatar { background-color: var(--success-light); color: var(--success); }
         .user-info { display: flex; flex-direction: column; }
-        .user-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
-        .user-id { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+        .user-name { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
+        .user-id { font-size: 11px; font-weight: 500; color: var(--text-muted); }
 
-        .custom-checkbox-container { position: relative; cursor: pointer; font-size: 22px; user-select: none; width: 28px; height: 28px; }
+        .custom-checkbox-container { position: relative; cursor: pointer; font-size: 22px; user-select: none; width: 26px; height: 26px; }
         .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
-        .checkmark { position: absolute; top: 0; left: 0; height: 28px; width: 28px; background-color: var(--bg-color); border: 2px solid #d1d5db; border-radius: 50%; transition: all 0.2s ease; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 26px; width: 26px; background-color: var(--bg-color); border: 2px solid #d1d5db; border-radius: 50%; transition: all 0.2s ease; }
         .custom-checkbox-container input:checked ~ .checkmark { background-color: var(--success); border-color: var(--success); }
-        .checkmark:after { content: ""; position: absolute; display: none; left: 9px; top: 5px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .checkmark:after { content: ""; position: absolute; display: none; left: 8px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
     </style>
 </head>
 <body>
-    <div class="card">
+    <!-- KHUNG 1: KHU VỰC QUÉT MÃ -->
+    <div class="card" id="card-camera">
         <h2 class="header-title">Hệ Thống Điểm Danh</h2>
         
-        <!-- === MỚI: Thanh chọn danh mục === -->
         <div class="activity-selector">
-            <label for="sheetSelect">Chọn danh mục / sự kiện:</label>
             <select id="sheetSelect" onchange="onSheetChange()">
                 <option>Đang tải danh sách...</option>
             </select>
         </div>
-        <!-- ============================== -->
 
         <div class="today-badge">📅 Hôm nay: &nbsp;<span id="todayDisplay">...</span></div>
         
@@ -94,7 +115,8 @@
         <div id="status" class="status-default">⏳ Đang kết nối hệ thống...</div>
     </div>
 
-    <div class="card">
+    <!-- KHUNG 2: DANH SÁCH (Tự động kéo giãn) -->
+    <div class="card" id="card-list">
         <div class="list-header-wrapper">
             <h3 class="list-header">Danh Sách Trạng Thái</h3>
             <button id="btnToggleList" class="btn-toggle" onclick="toggleList()">Thu gọn</button>
@@ -105,10 +127,9 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQlkE9C6U5VlpCpxrDvD6nybk5cYeB-FC59YVg5UZgrkUvUb0RmO6ir5JuqYZz_0I/exec"; 
         
-        let globalData = {}; // Chứa toàn bộ dữ liệu của tất cả các Sheets
-        let currentSheetName = ""; // Tên sheet đang được chọn
-        let usersData = []; // Dữ liệu của sheet hiện tại
-        
+        let globalData = {}; 
+        let currentSheetName = ""; 
+        let usersData = []; 
         let todayDateStr = "";
         let isProcessing = false; 
         let isExpanded = true; 
@@ -131,12 +152,11 @@
             renderList();
         }
 
-        // === MỚI: Xử lý khi đổi danh mục ===
         function onSheetChange() {
             const select = document.getElementById("sheetSelect");
             currentSheetName = select.value;
             usersData = globalData[currentSheetName] || [];
-            lastScannedId = null; // Xóa trí nhớ người quét khi đổi danh mục
+            lastScannedId = null; 
             renderList();
             updateStatus(`Đã chuyển sang: ${currentSheetName}`, "default");
         }
@@ -144,11 +164,10 @@
         function loadInitialData() {
             fetch(SCRIPT_URL).then(res => res.json()).then(data => {
                 todayDateStr = data.today;
-                globalData = data.data; // Lưu tổng dữ liệu
+                globalData = data.data; 
                 
                 document.getElementById("todayDisplay").innerText = todayDateStr;
                 
-                // Đổ dữ liệu tên các Sheet vào thẻ <select>
                 const select = document.getElementById("sheetSelect");
                 select.innerHTML = "";
                 data.sheetNames.forEach(sheet => {
@@ -157,7 +176,6 @@
                     select.appendChild(opt);
                 });
 
-                // Chọn sheet đầu tiên làm mặc định
                 if (data.sheetNames.length > 0) {
                     currentSheetName = data.sheetNames[0];
                     usersData = globalData[currentSheetName] || [];
@@ -166,7 +184,7 @@
                 renderList();
                 startCamera();
                 
-            }).catch(err => { updateStatus("⚠️ Lỗi tải dữ liệu. Vui lòng tải lại trang!", "error"); });
+            }).catch(err => { updateStatus("⚠️ Lỗi kết nối Google Sheets!", "error"); });
         }
 
         function renderList() {
@@ -180,8 +198,8 @@
             }
             
             if (displayUsers.length === 0) {
-                if (!isExpanded) container.innerHTML = `<div style="text-align:center; padding: 25px 10px; color: var(--text-muted); font-size: 14px; line-height: 1.6;">✨ Đang ở chế độ thu gọn.<br>Người vừa quét sẽ hiển thị tại đây!</div>`;
-                else container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 14px;">Chưa có danh sách trong danh mục này</div>`;
+                if (!isExpanded) container.innerHTML = `<div style="text-align:center; padding: 25px 10px; color: var(--text-muted); font-size: 13px; line-height: 1.6;">✨ Chế độ thu gọn.<br>Người vừa quét sẽ hiển thị tại đây!</div>`;
+                else container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 13px;">Danh sách trống</div>`;
                 return;
             }
 
@@ -206,7 +224,10 @@
 
         function startCamera() {
             document.getElementById("btn-fallback").style.display = "none";
-            updateStatus("⏳ Đang quét tìm thiết bị camera...", "loading");
+            updateStatus("⏳ Đang bật camera...", "loading");
+
+            // Kích thước khung quét đã thu nhỏ lại cho phù hợp với camera 200px
+            const config = { fps: 10, qrbox: { width: 150, height: 150 } };
 
             Html5Qrcode.getCameras().then(devices => {
                 if (devices && devices.length > 0) {
@@ -215,19 +236,19 @@
                         let camName = devices[i].label.toLowerCase();
                         if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) { cameraId = devices[i].id; break; }
                     }
-                    html5QrCode.start(cameraId, { fps: 10, qrbox: { width: 200, height: 200 } }, onScanSuccess)
+                    html5QrCode.start(cameraId, config, onScanSuccess)
                     .then(() => updateStatus("📷 Sẵn sàng điểm danh!", "success"))
                     .catch(err => { console.log(err); showFallback(); });
                 } else updateStatus("⚠️ Không tìm thấy camera!", "error");
             }).catch(err => {
-                html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 200, height: 200 } }, onScanSuccess)
+                html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
                 .catch(err2 => showFallback());
             });
         }
 
         function showFallback() {
             document.getElementById("btn-fallback").style.display = "block";
-            updateStatus("⚠️ Camera bị treo. Hãy bấm nút phía trên để thử lại.", "error");
+            updateStatus("⚠️ Camera bị treo. Chạm nút phía trên để thử lại.", "error");
         }
 
         function onScanSuccess(decodedText) {
@@ -244,7 +265,7 @@
                 
                 if (isExpanded) {
                     const targetRow = document.getElementById(`user-${user.id}`);
-                    if (targetRow) document.getElementById("userList").scrollTo({ top: targetRow.offsetTop - 150, behavior: 'smooth' });
+                    if (targetRow) document.getElementById("userList").scrollTo({ top: targetRow.offsetTop - 50, behavior: 'smooth' });
                 }
 
                 sendDataToSheet(decodedText, true);
@@ -258,11 +279,7 @@
             updateStatus(`⏳ Đang ghi nhận: ${qrCode}...`, "loading");
             fetch(SCRIPT_URL, { 
                 method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify({ 
-                    qrCode: qrCode, 
-                    checked: isChecked,
-                    sheetName: currentSheetName // === MỚI: Gửi kèm tên danh mục ===
-                }) 
+                body: JSON.stringify({ qrCode: qrCode, checked: isChecked, sheetName: currentSheetName }) 
             }).then(() => updateStatus(`✅ Điểm danh thành công: ${qrCode}`, "success"));
         }
 

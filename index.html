@@ -55,50 +55,30 @@
             font-size: 14px; width: 100%; margin-bottom: 20px; 
         }
 
-        /* ===== CSS MỚI CHO CAMERA VUÔNG ===== */
+        /* ===== CSS CAMERA VUÔNG ===== */
         .scanner-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 16px;
-            position: relative;
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 16px; position: relative;
         }
 
         #reader { 
-            width: 260px; /* Chiều rộng vuông */
-            height: 260px; /* Chiều cao vuông */
-            border-radius: 24px; 
-            overflow: hidden; 
-            border: 4px solid var(--primary-light);
+            width: 260px; height: 260px; border-radius: 24px; 
+            overflow: hidden; border: 4px solid var(--primary-light);
             box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
-            background: #000; /* Màu nền đen khi chưa lên hình */
-            position: relative;
+            background: #000; position: relative;
         }
 
-        /* Ép video phủ kín khung vuông */
         #reader video { 
-            object-fit: cover !important; 
-            width: 100% !important; 
-            height: 100% !important; 
-            border-radius: 20px !important;
+            object-fit: cover !important; width: 100% !important; 
+            height: 100% !important; border-radius: 20px !important;
         }
 
-        /* Nút bật camera thủ công (Chỉ hiện khi trình duyệt chặn tự động mở) */
         #btn-fallback {
-            position: absolute;
-            z-index: 10;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-            display: none; /* Ẩn mặc định */
+            position: absolute; z-index: 10; background: var(--primary);
+            color: white; border: none; padding: 12px 20px; border-radius: 12px;
+            font-weight: 600; font-size: 14px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); display: none; 
         }
-        /* ==================================== */
 
         #status { 
             padding: 12px; text-align: center; font-weight: 600; 
@@ -110,7 +90,15 @@
         .status-loading { background: var(--primary-light); color: var(--primary); }
 
         .list-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
-        .user-list { max-height: 400px; overflow-y: auto; padding-right: 4px; }
+        
+        /* CẬP NHẬT CSS: Thêm position: relative để tính toán cuộn nội bộ */
+        .user-list { 
+            max-height: 400px; 
+            overflow-y: auto; 
+            padding-right: 4px; 
+            position: relative; 
+        }
+        
         .user-list::-webkit-scrollbar { width: 4px; }
         .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
@@ -181,7 +169,7 @@
         
         let usersData = [];
         let todayDateStr = "";
-        let isProcessing = false; // Biến chống quét liên tục 1 mã nhiều lần
+        let isProcessing = false; 
 
         function getInitials(name) {
             if (!name) return "?";
@@ -245,7 +233,7 @@
         }
 
         // ==========================================
-        // HỆ THỐNG CAMERA TỰ ĐỘNG (PHIÊN BẢN VƯỢT LỖI MÀN HÌNH ĐEN)
+        // HỆ THỐNG CAMERA TỰ ĐỘNG
         // ==========================================
         const html5QrCode = new Html5Qrcode("reader");
 
@@ -253,23 +241,17 @@
             document.getElementById("btn-fallback").style.display = "none";
             updateStatus("⏳ Đang quét tìm thiết bị camera...", "loading");
 
-            // BƯỚC 1: Lấy danh sách toàn bộ camera vật lý đang có trên máy
             Html5Qrcode.getCameras().then(devices => {
                 if (devices && devices.length > 0) {
-                    
-                    // BƯỚC 2: Ưu tiên tìm Camera Sau (back / environment)
-                    let cameraId = devices[0].id; // Mặc định lấy cam đầu tiên (nếu dùng Laptop)
-                    
+                    let cameraId = devices[0].id; 
                     for (let i = 0; i < devices.length; i++) {
                         let camName = devices[i].label.toLowerCase();
-                        // Dò tên camera để tìm camera sau
                         if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) {
                             cameraId = devices[i].id;
-                            break; // Tìm thấy thì dừng
+                            break; 
                         }
                     }
 
-                    // BƯỚC 3: Kích hoạt chính xác ID của camera đã chọn
                     html5QrCode.start(
                         cameraId, 
                         { fps: 10, qrbox: { width: 200, height: 200 } },
@@ -286,8 +268,6 @@
                 }
             }).catch(err => {
                 console.log("Lỗi lấy danh sách cam:", err);
-                
-                // Phương án dự phòng cuối cùng nếu hàm quét bị chặn
                 html5QrCode.start(
                     { facingMode: "environment" }, 
                     { fps: 10, qrbox: { width: 200, height: 200 } },
@@ -314,9 +294,21 @@
                 isProcessing = true;
                 user.checked = true;
                 renderList();
-                document.getElementById(`user-${user.id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                sendDataToSheet(decodedText, true);
+                
+                // ======== ĐÃ SỬA LỖI CUỘN TRANG TẠI ĐÂY ========
+                // Lệnh mới: Chỉ cuộn riêng hộp danh sách (userList), giữ Camera luôn đứng yên
+                const listContainer = document.getElementById("userList");
+                const targetRow = document.getElementById(`user-${user.id}`);
+                
+                if (listContainer && targetRow) {
+                    listContainer.scrollTo({
+                        top: targetRow.offsetTop - 150, // Trừ 150px để dòng được đưa vào tầm nhìn đẹp nhất
+                        behavior: 'smooth'
+                    });
+                }
+                // ===============================================
 
+                sendDataToSheet(decodedText, true);
                 setTimeout(() => { isProcessing = false; }, 1500); 
             } else { 
                 updateStatus(`❌ Mã không hợp lệ: ${decodedText}`, "error"); 
@@ -347,7 +339,6 @@
             sendDataToSheet(qrCode, isChecked);
         }
 
-        // Khởi động
         loadInitialData();
     </script>
 </body>

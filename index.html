@@ -18,17 +18,15 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         
-        /* CẬP NHẬT 1: Khóa trang web vừa đúng 100% chiều cao màn hình (100dvh) */
         body { 
             background-color: var(--bg-color); color: var(--text-main); 
             padding: 12px; max-width: 500px; margin: auto; 
             -webkit-font-smoothing: antialiased;
             height: 100dvh; 
             display: flex; flex-direction: column; 
-            overflow: hidden; /* Khóa không cho cuộn toàn trang */
+            overflow: hidden; 
         }
         
-        /* CẬP NHẬT 2: Ép các khung thẻ tự động co giãn cho vừa màn hình */
         .card { 
             background: var(--card-bg); padding: 12px; 
             border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
@@ -36,16 +34,12 @@
             display: flex; flex-direction: column;
         }
 
-        /* Thẻ 1 (Camera): Giữ nguyên chiều cao theo nội dung */
         #card-camera { flex-shrink: 0; margin-bottom: 12px; }
-
-        /* Thẻ 2 (Danh sách): Kéo giãn lấp đầy phần trống còn lại */
         #card-list { flex: 1; min-height: 0; margin-bottom: 0; }
 
         .header-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
 
         .activity-selector { margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .activity-selector label { font-size: 13px; font-weight: 600; color: var(--text-main); }
         .activity-selector select { 
             width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); 
             background-color: var(--card-bg); font-size: 14px; font-weight: 600; color: var(--primary); 
@@ -56,7 +50,6 @@
         
         .scanner-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative; }
         
-        /* CẬP NHẬT 3: Thu nhỏ khung camera xuống 200px để không choán chỗ */
         #reader { width: 200px; height: 200px; border-radius: 20px; overflow: hidden; border: 4px solid var(--primary-light); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15); background: #000; position: relative; }
         #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; border-radius: 16px !important; }
         #btn-fallback { position: absolute; z-index: 10; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: none; }
@@ -71,7 +64,6 @@
         .list-header { font-size: 16px; font-weight: 700; margin: 0; }
         .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s ease; }
         
-        /* CẬP NHẬT 4: Danh sách tự động giãn cho vừa khoảng trống */
         .user-list { flex: 1; overflow-y: auto; padding-right: 4px; position: relative; }
         .user-list::-webkit-scrollbar { width: 4px; }
         .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -95,7 +87,6 @@
     </style>
 </head>
 <body>
-    <!-- KHUNG 1: KHU VỰC QUÉT MÃ -->
     <div class="card" id="card-camera">
         <h2 class="header-title">Hệ Thống Điểm Danh</h2>
         
@@ -115,7 +106,6 @@
         <div id="status" class="status-default">⏳ Đang kết nối hệ thống...</div>
     </div>
 
-    <!-- KHUNG 2: DANH SÁCH (Tự động kéo giãn) -->
     <div class="card" id="card-list">
         <div class="list-header-wrapper">
             <h3 class="list-header">Danh Sách Trạng Thái</h3>
@@ -135,7 +125,7 @@
         let isExpanded = true; 
         let lastScannedId = null; 
 
-        function getInitials(name) { return name ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?"; }
+        function getInitials(name) { return name && name.trim() !== "" ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?"; }
 
         function updateStatus(message, type) {
             const statusEl = document.getElementById("status");
@@ -192,8 +182,11 @@
             container.innerHTML = "";
             let displayUsers = usersData;
             
+            // Lọc bỏ những dòng trống (không có Mã ID) để giao diện sạch sẽ
+            displayUsers = displayUsers.filter(u => u.id !== "");
+
             if (!isExpanded) {
-                if (lastScannedId) displayUsers = usersData.filter(u => u.id === lastScannedId);
+                if (lastScannedId) displayUsers = displayUsers.filter(u => u.id === lastScannedId);
                 else displayUsers = [];
             }
             
@@ -210,7 +203,7 @@
                 div.innerHTML = `
                     <div class="user-info-wrapper">
                         <div class="avatar">${getInitials(user.name)}</div>
-                        <div class="user-info"><span class="user-name">${user.name}</span><span class="user-id">ID: ${user.id}</span></div>
+                        <div class="user-info"><span class="user-name">${user.name}</span><span class="user-id">Mã: ${user.id}</span></div>
                     </div>
                     <label class="custom-checkbox-container">
                         <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
@@ -226,7 +219,6 @@
             document.getElementById("btn-fallback").style.display = "none";
             updateStatus("⏳ Đang bật camera...", "loading");
 
-            // Kích thước khung quét đã thu nhỏ lại cho phù hợp với camera 200px
             const config = { fps: 10, qrbox: { width: 150, height: 150 } };
 
             Html5Qrcode.getCameras().then(devices => {

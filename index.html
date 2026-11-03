@@ -248,7 +248,7 @@
 
             let user = usersData.find(u => u.id === decodedText);
             if (user) {
-                if (user.checked) { updateStatus(`Mã [${decodedText}] đã điểm danh trong mục này!`, "loading"); return; }
+                if (user.checked) { updateStatus(`Đã điểm danh trong mục này rồi!`, "loading"); return; }
                 
                 isProcessing = true;
                 user.checked = true;
@@ -268,11 +268,11 @@
         }
 
         function sendDataToSheet(qrCode, isChecked) {
-            updateStatus(`⏳ Đang ghi nhận: ${qrCode}...`, "loading");
+            updateStatus(`⏳ Đang ghi nhận...`, "loading");
             fetch(SCRIPT_URL, { 
                 method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
                 body: JSON.stringify({ qrCode: qrCode, checked: isChecked, sheetName: currentSheetName }) 
-            }).then(() => updateStatus(`✅ Điểm danh thành công: ${qrCode}`, "success"));
+            }).then(() => updateStatus(`✅ Điểm danh thành công`, "success"));
         }
 
         function manualCheck(qrCode, isChecked) {

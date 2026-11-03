@@ -203,6 +203,7 @@
                 div.innerHTML = `
                     <div class="user-info-wrapper">
                         <div class="avatar">${getInitials(user.name)}</div>
+                        <div class="user-info"><span class="user-name">${user.name}</span></div>
                     </div>
                     <label class="custom-checkbox-container">
                         <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
@@ -262,7 +263,7 @@
                 sendDataToSheet(decodedText, true);
                 setTimeout(() => { isProcessing = false; }, 1500); 
             } else { 
-                updateStatus(`❌ Không có trong danh mục [${currentSheetName}]`, "error"); 
+                updateStatus(`❌ Mã [${decodedText}] không có trong danh mục [${currentSheetName}]`, "error"); 
             }
         }
 

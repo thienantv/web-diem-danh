@@ -60,9 +60,11 @@
         .status-error { background: var(--error-light); color: var(--error); }
         .status-loading { background: var(--primary-light); color: var(--primary); }
 
-        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .list-header { font-size: 16px; font-weight: 700; margin: 0; }
-        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s ease; }
+        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 6px; }
+        .list-header { font-size: 15px; font-weight: 700; margin: 0; }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 10px; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+        .btn-toggle:active { transform: scale(0.96); }
         
         .user-list { flex: 1; overflow-y: auto; padding-right: 4px; position: relative; }
         .user-list::-webkit-scrollbar { width: 4px; }
@@ -108,8 +110,11 @@
 
     <div class="card" id="card-list">
         <div class="list-header-wrapper">
-            <h3 class="list-header">Danh Sách Trạng Thái</h3>
-            <button id="btnToggleList" class="btn-toggle" onclick="toggleList()">Thu gọn</button>
+            <h3 class="list-header">Danh Sách <span id="checkedCount" style="color: var(--success); font-size: 13px;"></span></h3>
+            <div class="header-actions">
+                <button class="btn-toggle" onclick="syncFromServer(true)" title="Cập nhật ngay">🔄</button>
+                <button id="btnToggleList" class="btn-toggle" onclick="toggleList()">Thu gọn</button>
+            </div>
         </div>
         <div class="user-list" id="userList"></div>
     </div>
@@ -117,6 +122,9 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynZL3yuCuF-IutLxNab7yQ_YCE5KcMLcQWbEfSwHMi9AoF_D7BQA8aQDtipM9Z0_Y/exec"; 
         
+        // Thời gian tự động đồng bộ lại danh sách (3000ms = 3 giây)
+        const AUTO_SYNC_INTERVAL = 3000;
+
         let globalData = {}; 
         let currentSheetName = ""; 
         let usersData = []; 
@@ -124,6 +132,11 @@
         let isProcessing = false; 
         let isExpanded = true; 
         let lastScannedId = null; 
+
+        // Biến kiểm soát đồng bộ ngầm
+        let isSyncing = false;
+        let isFetchingUpdates = false;
+        let lastWriteTime = 0;
 
         function getInitials(name) { return name && name.trim() !== "" ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?"; }
 
@@ -134,6 +147,17 @@
             else if(type === 'error') statusEl.classList.add('status-error');
             else if(type === 'loading') statusEl.classList.add('status-loading');
             else statusEl.classList.add('status-default');
+        }
+
+        function updateCounter() {
+            const validUsers = usersData.filter(u => u.id !== "");
+            const checkedUsers = validUsers.filter(u => u.checked);
+            const counterEl = document.getElementById("checkedCount");
+            if (validUsers.length > 0) {
+                counterEl.innerText = `(${checkedUsers.length}/${validUsers.length})`;
+            } else {
+                counterEl.innerText = "";
+            }
         }
 
         function toggleList() {
@@ -173,13 +197,58 @@
 
                 renderList();
                 startCamera();
+
+                // Kích hoạt chu kỳ tự động làm mới danh sách
+                setInterval(() => syncFromServer(false), AUTO_SYNC_INTERVAL);
                 
             }).catch(err => { updateStatus("⚠️ Lỗi kết nối Google Sheets!", "error"); });
+        }
+
+        async function syncFromServer(isManual = false) {
+            // Không đồng bộ đè nếu đang quét, đang gửi dữ liệu, hoặc vừa gửi xong chưa đầy 3 giây
+            if (isProcessing || isSyncing || isFetchingUpdates) return;
+            if (!isManual && (Date.now() - lastWriteTime < 3000)) return;
+            if (!isManual && document.hidden) return;
+
+            isFetchingUpdates = true;
+            if (isManual) updateStatus("🔄 Đang làm mới danh sách...", "loading");
+
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+
+                // Kiểm tra lại lần nữa tránh ghi đè nếu trong lúc tải về bạn vừa quét mã mới
+                if (isProcessing || isSyncing) {
+                    isFetchingUpdates = false;
+                    return;
+                }
+
+                todayDateStr = data.today;
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                globalData = data.data;
+                usersData = globalData[currentSheetName] || [];
+
+                // Giữ nguyên vị trí cuộn của danh sách
+                const listEl = document.getElementById("userList");
+                const currentScroll = listEl.scrollTop;
+                renderList();
+                listEl.scrollTop = currentScroll;
+
+                if (isManual) {
+                    updateStatus("✅ Đã cập nhật danh sách mới nhất!", "success");
+                }
+            } catch (err) {
+                if (isManual) updateStatus("⚠️ Không thể làm mới dữ liệu!", "error");
+            } finally {
+                isFetchingUpdates = false;
+            }
         }
 
         function renderList() {
             const container = document.getElementById("userList");
             container.innerHTML = "";
+            updateCounter();
+
             let displayUsers = usersData;
             
             // Lọc bỏ những dòng trống (không có Mã ID) để giao diện sạch sẽ
@@ -268,11 +337,19 @@
         }
 
         function sendDataToSheet(qrCode, isChecked) {
+            isSyncing = true;
             updateStatus(`⏳ Đang ghi nhận...`, "loading");
             fetch(SCRIPT_URL, { 
                 method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
                 body: JSON.stringify({ qrCode: qrCode, checked: isChecked, sheetName: currentSheetName }) 
-            }).then(() => updateStatus(`✅ Điểm danh thành công`, "success"));
+            }).then(() => {
+                isSyncing = false;
+                lastWriteTime = Date.now();
+                updateStatus(`✅ Điểm danh thành công`, "success");
+            }).catch(() => {
+                isSyncing = false;
+                updateStatus(`⚠️ Lỗi kết nối khi lưu`, "error");
+            });
         }
 
         function manualCheck(qrCode, isChecked) {

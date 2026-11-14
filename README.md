@@ -1,107 +1,368 @@
-function doGet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheets = ss.getSheets();
-  var todayStr = getTodayString();
-  
-  var result = {
-    today: todayStr,
-    sheetNames: [],
-    data: {}
-  };
-  
-  // Quét qua tất cả các trang tính (Tabs) đang có
-  for (var s = 0; s < sheets.length; s++) {
-    var sheet = sheets[s];
-    var sheetName = sheet.getName();
-    result.sheetNames.push(sheetName);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Điểm Danh QR Đa Năng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
     
-    var data = sheet.getDataRange().getValues();
-    var users = [];
-    
-    if (data.length > 0) {
-      var headerRow = data[0];
-      var todayColIndex = -1;
-      
-      // Bắt đầu dò ngày từ Cột H (chỉ số 7 trong mảng)
-      for (var j = 7; j < headerRow.length; j++) {
-        var dVal = headerRow[j];
-        var dStr = (dVal instanceof Date) ? Utilities.formatDate(dVal, Session.getScriptTimeZone(), "yyyy-MM-dd") : dVal.toString().trim();
-        if (dStr === todayStr) { todayColIndex = j; break; }
-      }
-      
-      for (var i = 1; i < data.length; i++) {
-        var isChecked = false;
-        if (todayColIndex !== -1 && data[i][todayColIndex] !== undefined) {
-          isChecked = Boolean(data[i][todayColIndex]);
+    <style>
+        :root {
+            --primary: #4f46e5; --primary-light: #e0e7ff;
+            --success: #10b981; --success-light: #d1fae5;
+            --error: #ef4444; --error-light: #fee2e2;
+            --bg-color: #f3f4f6; --card-bg: #ffffff;
+            --text-main: #111827; --text-muted: #6b7280; --border: #e5e7eb;
         }
-        users.push({
-          // [ĐÃ SỬA]: Lấy Mã từ Cột B (chỉ số 1)
-          id: data[i][1] ? data[i][1].toString().trim() : "", 
-          // [ĐÃ SỬA]: Lấy Tên từ Cột C (chỉ số 2)
-          name: data[i][2] ? data[i][2].toString().trim() : "",
-          checked: isChecked
-        });
-      }
-    }
-    result.data[sheetName] = users;
-  }
-  
-  return replyJSON(result);
-}
 
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var sheetName = data.sheetName; // Nhận tên danh mục từ Web
-  
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(sheetName);
-  
-  if (!sheet) return replyJSON({ success: false, message: "Danh mục không tồn tại" });
-  
-  var targetId = data.qrCode.toString().trim();
-  var isChecked = data.checked !== undefined ? data.checked : true;
-  var todayStr = getTodayString();
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-color); color: var(--text-main); 
+            padding: 12px; max-width: 500px; margin: auto; 
+            -webkit-font-smoothing: antialiased;
+            height: 100dvh; 
+            display: flex; flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        .card { 
+            background: var(--card-bg); padding: 12px; 
+            border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            border: 1px solid rgba(0,0,0,0.02);
+            display: flex; flex-direction: column;
+        }
 
-  var headerRow = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
-  var dateColIndex = -1;
+        #card-camera { flex-shrink: 0; margin-bottom: 12px; }
+        #card-list { flex: 1; min-height: 0; margin-bottom: 0; }
 
-  // Bắt đầu dò ngày từ Cột H (chỉ số 7 trong mảng)
-  for (var j = 7; j < headerRow.length; j++) {
-    var dVal = headerRow[j];
-    var dStr = (dVal instanceof Date) ? Utilities.formatDate(dVal, Session.getScriptTimeZone(), "yyyy-MM-dd") : dVal.toString().trim();
-    if (dStr === todayStr) { dateColIndex = j + 1; break; }
-  }
+        .header-title { text-align: center; font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px; }
 
-  // Tự tạo cột mới bắt đầu tối thiểu từ Cột H (Cột số 8 trong Google Sheets)
-  if (dateColIndex === -1) {
-    dateColIndex = sheet.getLastColumn() + 1;
-    if(dateColIndex < 8) dateColIndex = 8; // Ép bắt đầu từ cột H
-    sheet.getRange(1, dateColIndex).setValue(todayStr);
-  }
+        .activity-selector { margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .activity-selector select { 
+            width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); 
+            background-color: var(--card-bg); font-size: 14px; font-weight: 600; color: var(--primary); 
+            outline: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        
+        .today-badge { display: flex; align-items: center; justify-content: center; background-color: var(--primary-light); color: var(--primary); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 13px; width: 100%; margin-bottom: 12px; }
+        
+        .scanner-container { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative; }
+        
+        #reader { width: 200px; height: 200px; border-radius: 20px; overflow: hidden; border: 4px solid var(--primary-light); box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15); background: #000; position: relative; }
+        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; border-radius: 16px !important; }
+        #btn-fallback { position: absolute; z-index: 10; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: none; }
 
-  // [ĐÃ SỬA]: Dò Mã QR ở Cột B (chứ không phải cột A)
-  var idColumn = sheet.getRange("B:B").getValues();
-  var rowIndex = -1;
-  for (var i = 1; i < idColumn.length; i++) {
-    if (idColumn[i][0].toString().trim() === targetId) { 
-      rowIndex = i + 1; 
-      break; 
-    }
-  }
+        #status { padding: 10px; text-align: center; font-weight: 600; font-size: 13px; border-radius: 10px; transition: all 0.3s ease; margin-bottom: 4px; }
+        .status-default { background: var(--border); color: var(--text-muted); }
+        .status-success { background: var(--success-light); color: var(--success); }
+        .status-error { background: var(--error-light); color: var(--error); }
+        .status-loading { background: var(--primary-light); color: var(--primary); }
 
-  if (rowIndex !== -1) {
-    var cell = sheet.getRange(rowIndex, dateColIndex);
-    cell.setValue(isChecked);
-    if (cell.getDataValidation() === null) { cell.insertCheckboxes(); }
-    return replyJSON({ success: true });
-  }
-  return replyJSON({ success: false, message: "Không tìm thấy Mã QR: " + targetId });
-}
+        .list-header-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 6px; }
+        .list-header { font-size: 15px; font-weight: 700; margin: 0; }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .btn-toggle { background-color: var(--primary-light); color: var(--primary); border: none; padding: 6px 10px; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+        .btn-toggle:active { transform: scale(0.96); }
+        
+        .user-list { flex: 1; overflow-y: auto; padding-right: 4px; position: relative; }
+        .user-list::-webkit-scrollbar { width: 4px; }
+        .user-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; margin-bottom: 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .user-item.active { background-color: #f8fafc; border-color: var(--success); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05); }
 
-function getTodayString() {
-  return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-}
+        .user-info-wrapper { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .user-item.active .avatar { background-color: var(--success-light); color: var(--success); }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;}
+        .user-id { font-size: 11px; font-weight: 500; color: var(--text-muted); }
 
-function replyJSON(data) {
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
+        .custom-checkbox-container { position: relative; cursor: pointer; font-size: 22px; user-select: none; width: 26px; height: 26px; }
+        .custom-checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+        .checkmark { position: absolute; top: 0; left: 0; height: 26px; width: 26px; background-color: var(--bg-color); border: 2px solid #d1d5db; border-radius: 50%; transition: all 0.2s ease; }
+        .custom-checkbox-container input:checked ~ .checkmark { background-color: var(--success); border-color: var(--success); }
+        .checkmark:after { content: ""; position: absolute; display: none; left: 8px; top: 5px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .custom-checkbox-container input:checked ~ .checkmark:after { display: block; }
+    </style>
+</head>
+<body>
+    <div class="card" id="card-camera">
+        <h2 class="header-title">Hệ Thống Điểm Danh</h2>
+        
+        <div class="activity-selector">
+            <select id="sheetSelect" onchange="onSheetChange()">
+                <option>Đang tải danh sách...</option>
+            </select>
+        </div>
+
+        <div class="today-badge">📅 Hôm nay: &nbsp;<span id="todayDisplay">...</span></div>
+        
+        <div class="scanner-container">
+            <div id="reader"></div>
+            <button id="btn-fallback" onclick="startCamera()">📷 Chạm để bật Camera</button>
+        </div>
+
+        <div id="status" class="status-default">⏳ Đang kết nối hệ thống...</div>
+    </div>
+
+    <div class="card" id="card-list">
+        <div class="list-header-wrapper">
+            <h3 class="list-header">Danh Sách <span id="checkedCount" style="color: var(--success); font-size: 13px;"></span></h3>
+            <div class="header-actions">
+                <button class="btn-toggle" onclick="syncFromServer(true)" title="Cập nhật ngay">🔄</button>
+                <button id="btnToggleList" class="btn-toggle" onclick="toggleList()">Thu gọn</button>
+            </div>
+        </div>
+        <div class="user-list" id="userList"></div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynZL3yuCuF-IutLxNab7yQ_YCE5KcMLcQWbEfSwHMi9AoF_D7BQA8aQDtipM9Z0_Y/exec"; 
+        
+        // Thời gian tự động đồng bộ lại danh sách (10000ms = 10 giây)
+        const AUTO_SYNC_INTERVAL = 10000;
+
+        let globalData = {}; 
+        let currentSheetName = ""; 
+        let usersData = []; 
+        let todayDateStr = "";
+        let isProcessing = false; 
+        let isExpanded = true; 
+        let lastScannedId = null; 
+
+        // Biến kiểm soát đồng bộ ngầm
+        let isSyncing = false;
+        let isFetchingUpdates = false;
+        let lastWriteTime = 0;
+
+        function getInitials(name) { return name && name.trim() !== "" ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?"; }
+
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById("status");
+            statusEl.innerText = message; statusEl.className = ""; 
+            if(type === 'success') statusEl.classList.add('status-success');
+            else if(type === 'error') statusEl.classList.add('status-error');
+            else if(type === 'loading') statusEl.classList.add('status-loading');
+            else statusEl.classList.add('status-default');
+        }
+
+        function updateCounter() {
+            const validUsers = usersData.filter(u => u.id !== "");
+            const checkedUsers = validUsers.filter(u => u.checked);
+            const counterEl = document.getElementById("checkedCount");
+            if (validUsers.length > 0) {
+                counterEl.innerText = `(${checkedUsers.length}/${validUsers.length})`;
+            } else {
+                counterEl.innerText = "";
+            }
+        }
+
+        function toggleList() {
+            isExpanded = !isExpanded;
+            document.getElementById("btnToggleList").innerText = isExpanded ? "Thu gọn" : "Mở rộng";
+            renderList();
+        }
+
+        function onSheetChange() {
+            const select = document.getElementById("sheetSelect");
+            currentSheetName = select.value;
+            usersData = globalData[currentSheetName] || [];
+            lastScannedId = null; 
+            renderList();
+            updateStatus(`Đã chuyển sang: ${currentSheetName}`, "default");
+        }
+
+        function loadInitialData() {
+            fetch(SCRIPT_URL).then(res => res.json()).then(data => {
+                todayDateStr = data.today;
+                globalData = data.data; 
+                
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                
+                const select = document.getElementById("sheetSelect");
+                select.innerHTML = "";
+                data.sheetNames.forEach(sheet => {
+                    const opt = document.createElement("option");
+                    opt.value = sheet; opt.innerText = sheet;
+                    select.appendChild(opt);
+                });
+
+                if (data.sheetNames.length > 0) {
+                    currentSheetName = data.sheetNames[0];
+                    usersData = globalData[currentSheetName] || [];
+                }
+
+                renderList();
+                startCamera();
+
+                // Kích hoạt chu kỳ tự động làm mới danh sách
+                setInterval(() => syncFromServer(false), AUTO_SYNC_INTERVAL);
+                
+            }).catch(err => { updateStatus("⚠️ Lỗi kết nối Google Sheets!", "error"); });
+        }
+
+        async function syncFromServer(isManual = false) {
+            // Không đồng bộ đè nếu đang quét, đang gửi dữ liệu, hoặc vừa gửi xong chưa đầy 3 giây
+            if (isProcessing || isSyncing || isFetchingUpdates) return;
+            if (!isManual && (Date.now() - lastWriteTime < 3000)) return;
+            if (!isManual && document.hidden) return;
+
+            isFetchingUpdates = true;
+            if (isManual) updateStatus("🔄 Đang làm mới danh sách...", "loading");
+
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+
+                // Kiểm tra lại lần nữa tránh ghi đè nếu trong lúc tải về bạn vừa quét mã mới
+                if (isProcessing || isSyncing) {
+                    isFetchingUpdates = false;
+                    return;
+                }
+
+                todayDateStr = data.today;
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                globalData = data.data;
+                usersData = globalData[currentSheetName] || [];
+
+                // Giữ nguyên vị trí cuộn của danh sách
+                const listEl = document.getElementById("userList");
+                const currentScroll = listEl.scrollTop;
+                renderList();
+                listEl.scrollTop = currentScroll;
+
+                if (isManual) {
+                    updateStatus("✅ Đã cập nhật danh sách mới nhất!", "success");
+                }
+            } catch (err) {
+                if (isManual) updateStatus("⚠️ Không thể làm mới dữ liệu!", "error");
+            } finally {
+                isFetchingUpdates = false;
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById("userList");
+            container.innerHTML = "";
+            updateCounter();
+
+            let displayUsers = usersData;
+            
+            // Lọc bỏ những dòng trống (không có Mã ID) để giao diện sạch sẽ
+            displayUsers = displayUsers.filter(u => u.id !== "");
+
+            if (!isExpanded) {
+                if (lastScannedId) displayUsers = displayUsers.filter(u => u.id === lastScannedId);
+                else displayUsers = [];
+            }
+            
+            if (displayUsers.length === 0) {
+                if (!isExpanded) container.innerHTML = `<div style="text-align:center; padding: 25px 10px; color: var(--text-muted); font-size: 13px; line-height: 1.6;">✨ Chế độ thu gọn.<br>Người vừa quét sẽ hiển thị tại đây!</div>`;
+                else container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 13px;">Danh sách trống</div>`;
+                return;
+            }
+
+            displayUsers.forEach(user => {
+                const div = document.createElement("div");
+                div.className = `user-item ${user.checked ? 'active' : ''}`;
+                div.id = `user-${user.id}`;
+                div.innerHTML = `
+                    <div class="user-info-wrapper">
+                        <div class="avatar">${getInitials(user.name)}</div>
+                        <div class="user-info"><span class="user-name">${user.name}</span></div>
+                    </div>
+                    <label class="custom-checkbox-container">
+                        <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
+                        <span class="checkmark"></span>
+                    </label>`;
+                container.appendChild(div);
+            });
+        }
+
+        const html5QrCode = new Html5Qrcode("reader");
+
+        function startCamera() {
+            document.getElementById("btn-fallback").style.display = "none";
+            updateStatus("⏳ Đang bật camera...", "loading");
+
+            const config = { fps: 10, qrbox: { width: 150, height: 150 } };
+
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    let cameraId = devices[0].id; 
+                    for (let i = 0; i < devices.length; i++) {
+                        let camName = devices[i].label.toLowerCase();
+                        if (camName.includes("back") || camName.includes("sau") || camName.includes("environment")) { cameraId = devices[i].id; break; }
+                    }
+                    html5QrCode.start(cameraId, config, onScanSuccess)
+                    .then(() => updateStatus("📷 Sẵn sàng điểm danh!", "success"))
+                    .catch(err => { console.log(err); showFallback(); });
+                } else updateStatus("⚠️ Không tìm thấy camera!", "error");
+            }).catch(err => {
+                html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err2 => showFallback());
+            });
+        }
+
+        function showFallback() {
+            document.getElementById("btn-fallback").style.display = "block";
+            updateStatus("⚠️ Camera bị treo. Chạm nút phía trên để thử lại.", "error");
+        }
+
+        function onScanSuccess(decodedText) {
+            if (isProcessing) return; 
+
+            let user = usersData.find(u => u.id === decodedText);
+            if (user) {
+                if (user.checked) { updateStatus(`Đã điểm danh trong mục này rồi!`, "loading"); return; }
+                
+                isProcessing = true;
+                user.checked = true;
+                lastScannedId = decodedText; 
+                renderList(); 
+                
+                if (isExpanded) {
+                    const targetRow = document.getElementById(`user-${user.id}`);
+                    if (targetRow) document.getElementById("userList").scrollTo({ top: targetRow.offsetTop - 50, behavior: 'smooth' });
+                }
+
+                sendDataToSheet(decodedText, true);
+                setTimeout(() => { isProcessing = false; }, 1500); 
+            } else { 
+                updateStatus(`❌ Mã [${decodedText}] không có trong danh mục [${currentSheetName}]`, "error"); 
+            }
+        }
+
+        function sendDataToSheet(qrCode, isChecked) {
+            isSyncing = true;
+            updateStatus(`⏳ Đang ghi nhận...`, "loading");
+            fetch(SCRIPT_URL, { 
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ qrCode: qrCode, checked: isChecked, sheetName: currentSheetName }) 
+            }).then(() => {
+                isSyncing = false;
+                lastWriteTime = Date.now();
+                updateStatus(`✅ Điểm danh thành công`, "success");
+            }).catch(() => {
+                isSyncing = false;
+                updateStatus(`⚠️ Lỗi kết nối khi lưu`, "error");
+            });
+        }
+
+        function manualCheck(qrCode, isChecked) {
+            let user = usersData.find(u => u.id === qrCode);
+            if (user) {
+                user.checked = isChecked;
+                lastScannedId = qrCode; 
+                renderList();
+            }
+            sendDataToSheet(qrCode, isChecked);
+        }
+
+        loadInitialData();
+    </script>
+</body>
+</html>

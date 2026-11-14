@@ -453,8 +453,8 @@
             </select>
         </div>
         <div class="meta-bar">
-            <div class="meta-pill">📅 <span id="todayDisplay">...</span></div>
-            <div class="meta-pill count-pill">✓ Đã điểm danh: <span id="checkedCount">0/0</span></div>
+            <div class="meta-pill"><span id="todayDisplay">...</span></div>
+            <div class="meta-pill count-pill">Đã điểm danh: <span id="checkedCount">0/0</span></div>
         </div>
     </div>
 
@@ -484,10 +484,9 @@
     <div id="view-list">
         <div class="list-toolbar">
             <div class="search-box">
-                <span>🔍</span>
                 <input type="text" id="searchInput" placeholder="Tìm theo tên..." oninput="renderList()">
             </div>
-            <button class="btn-refresh" onclick="syncFromServer(true)" title="Làm mới danh sách">🔄</button>
+            <button class="btn-refresh" onclick="syncFromServer(true)" title="Làm mới danh sách">⟳</button>
         </div>
         <div class="user-list" id="userList"></div>
     </div>
@@ -495,11 +494,11 @@
     <!-- THANH ĐIỀU HƯỚNG 2 CHẾ ĐỘ -->
     <div class="bottom-nav">
         <button class="nav-tab active" id="tab-scan" onclick="switchMode('scan')">
-            <span class="nav-icon">📷</span>
+            <span class="nav-icon">⛶</span>
             <span>Quét mã QR</span>
         </button>
         <button class="nav-tab" id="tab-list" onclick="switchMode('list')">
-            <span class="nav-icon">📋</span>
+            <span class="nav-icon">🗒</span>
             <span>Điểm danh tay</span>
         </button>
     </div>
@@ -606,7 +605,7 @@
         }
 
         function loadInitialData() {
-            showToast("⏳ Đang tải dữ liệu...", "loading", 0);
+            showToast("⌛︎ Đang tải dữ liệu...", "loading", 0);
             fetch(SCRIPT_URL).then(res => res.json()).then(data => {
                 todayDateStr = data.today;
                 globalData = data.data; 
@@ -630,7 +629,7 @@
                 startCamera();
                 setInterval(() => syncFromServer(false), AUTO_SYNC_INTERVAL);
             }).catch(() => {
-                showToast("⚠️ Lỗi kết nối Google Sheets!", "error", 5000);
+                showToast("⚠︎ Lỗi kết nối Google Sheets!", "error", 5000);
             });
         }
 
@@ -641,7 +640,7 @@
 
             isFetchingUpdates = true;
             const refreshBtn = document.querySelector(".btn-refresh");
-            if (isManual && refreshBtn) refreshBtn.innerText = "⏳";
+            if (isManual && refreshBtn) refreshBtn.innerText = "⌛︎";
 
             try {
                 const res = await fetch(SCRIPT_URL);
@@ -662,7 +661,7 @@
                 console.error(err);
             } finally {
                 isFetchingUpdates = false;
-                if (refreshBtn) refreshBtn.innerText = "🔄";
+                if (refreshBtn) refreshBtn.innerText = "⟳";
             }
         }
 
@@ -692,7 +691,7 @@
                         <div class="avatar">${getInitials(user.name)}</div>
                         <div>
                             <div class="user-name">${user.name}</div>
-                            <div class="user-status-text">${user.checked ? '✓ Đã điểm danh' : 'Chưa điểm danh'}</div>
+                            <div class="user-status-text">${user.checked ? 'Đã điểm danh' : 'Chưa điểm danh'}</div>
                         </div>
                     </div>
                     <label class="custom-checkbox">

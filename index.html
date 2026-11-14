@@ -77,6 +77,12 @@
             cursor: pointer;
         }
 
+        .select-wrapper select option {
+            background-color: #ffffff;
+            color: #111827;
+            font-weight: 600;
+        }
+
         body.list-mode .select-wrapper select {
             background: var(--bg-light);
             color: var(--primary);
@@ -155,6 +161,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        #camera-video::-webkit-media-controls,
+        #camera-video::-webkit-media-controls-start-playback-button {
+            display: none !important;
+            -webkit-appearance: none;
         }
 
         .scanner-overlay {
@@ -451,7 +463,7 @@
 
     <!-- MÀN HÌNH 1: CAMERA QUÉT MÃ QR -->
     <div id="view-scanner">
-        <video id="camera-video" playsinline muted autoplay></video>
+        <video id="camera-video" playsinline muted ></video>
         <canvas id="scan-canvas" style="display: none;"></canvas>
         
         <div class="scanner-overlay">

@@ -12,6 +12,7 @@
             --primary: #0068ff;
             --primary-light: #e5f0ff;
             --success: #10b981;
+            --success-bg: #ecfdf5;
             --error: #ef4444;
             --bg-light: #f4f5f7;
             --card-bg: #ffffff;
@@ -35,48 +36,40 @@
             position: relative;
         }
 
-        /* ================= TOP BAR ================= */
+        /* ================= TOP BAR (CÂN ĐỐI 2 HÀNG GỌN GÀNG) ================= */
         .top-bar {
             position: absolute;
             top: 0; left: 0; right: 0;
             z-index: 30;
-            padding: 14px 16px;
+            padding: 12px 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%);
-            transition: background 0.3s ease;
+            gap: 8px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.35) 75%, rgba(0,0,0,0) 100%);
+            transition: background 0.25s ease;
         }
 
         body.list-mode .top-bar {
             position: relative;
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-        }
-
-        .top-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
         }
 
         .select-wrapper {
-            flex: 1;
+            width: 100%;
             position: relative;
         }
 
         .select-wrapper select {
             width: 100%;
             appearance: none;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 9px 34px 9px 14px;
-            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            padding: 9px 36px 9px 14px;
+            border-radius: 12px;
             font-size: 14px;
             font-weight: 600;
             outline: none;
@@ -102,22 +95,44 @@
 
         body.list-mode .select-wrapper::after { color: var(--primary); }
 
-        .date-pill {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            color: #fff;
-            padding: 8px 12px;
+        /* Thanh thông tin phụ: Ngày tháng & Sĩ số cân đối 2 bên */
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 600;
-            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            color: #f3f4f6;
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        body.list-mode .date-pill {
-            background: var(--primary-light);
-            color: var(--primary);
-            border: none;
+        .meta-pill.count-pill {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: rgba(16, 185, 129, 0.45);
+            color: #6ee7b7;
+        }
+
+        body.list-mode .meta-pill {
+            background: var(--bg-light);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        body.list-mode .meta-pill.count-pill {
+            background: var(--success-bg);
+            color: var(--success);
+            border-color: #a7f3d0;
         }
 
         /* ================= VIEW 1: CAMERA KIỂU ZALO ================= */
@@ -147,14 +162,11 @@
             height: 100% !important;
         }
 
-        /* Ẩn triệt để khung viền mặc định của thư viện để tránh bị 2 khung chồng lên nhau */
         #qr-shaded-region,
         #reader__scan_region > div,
         #reader__scan_region img,
         #reader__dashboard {
             display: none !important;
-            border: none !important;
-            box-shadow: none !important;
         }
 
         .scanner-overlay {
@@ -164,26 +176,24 @@
             flex-direction: column;
             align-items: center;
             pointer-events: none;
-            margin-top: -30px;
+            margin-top: -10px;
         }
 
         .scan-hint {
-            color: #fff;
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 13.5px;
             font-weight: 500;
-            margin-bottom: 24px;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            background: rgba(0,0,0,0.4);
+            margin-bottom: 22px;
+            background: rgba(0, 0, 0, 0.45);
             padding: 6px 16px;
             border-radius: 20px;
         }
 
-        /* Khung 4 góc duy nhất kiểu Zalo */
         .zalo-frame {
-            width: 240px;
-            height: 240px;
+            width: 245px;
+            height: 245px;
             position: relative;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.52);
             border-radius: 24px;
         }
 
@@ -202,8 +212,8 @@
 
         .scan-laser {
             position: absolute;
-            left: 12px;
-            right: 12px;
+            left: 14px;
+            right: 14px;
             height: 2px;
             background: linear-gradient(90deg, transparent, #00e5ff, #ffffff, #00e5ff, transparent);
             box-shadow: 0 0 12px #00e5ff;
@@ -214,7 +224,7 @@
             0% { top: 15px; opacity: 0; }
             15% { opacity: 1; }
             85% { opacity: 1; }
-            100% { top: 225px; opacity: 0; }
+            100% { top: 230px; opacity: 0; }
         }
 
         #btn-fallback {
@@ -223,7 +233,7 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 12px 22px;
             border-radius: 24px;
             font-weight: 600;
             font-size: 14px;
@@ -232,29 +242,34 @@
             display: none;
         }
 
-        /* ================= THÔNG BÁO NỔI (TOAST) ================= */
+        /* ================= THÔNG BÁO NỔI (CHỈ HIỆN Ở MÀN QUÉT QR) ================= */
         #toast-status {
             position: absolute;
-            top: 72px;
+            top: 98px;
             left: 24px;
             right: 24px;
             z-index: 40;
-            padding: 14px 18px;
-            border-radius: 16px;
+            padding: 13px 18px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 700;
             text-align: center;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.28);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             opacity: 0;
             transform: translateY(-10px);
             pointer-events: none;
         }
 
+        /* Tuyệt đối ẩn thông báo khi đang ở màn hình Điểm danh tay */
+        body.list-mode #toast-status {
+            display: none !important;
+        }
+
         #toast-status.show { opacity: 1; transform: translateY(0); }
-        .toast-default { background: rgba(30, 41, 59, 0.88); color: #fff; font-size: 14px; font-weight: 600; }
+        .toast-default { background: rgba(30, 41, 59, 0.9); color: #fff; font-size: 14.5px; }
         .toast-success { background: rgba(16, 185, 129, 0.96); color: #fff; }
         .toast-error { background: rgba(239, 68, 68, 0.96); color: #fff; font-size: 14px; font-weight: 600; }
         .toast-loading { background: rgba(0, 104, 255, 0.92); color: #fff; font-size: 14px; font-weight: 600; }
@@ -266,26 +281,27 @@
             flex-direction: column;
             background: var(--bg-light);
             overflow: hidden;
-            padding-bottom: 72px;
+            padding-bottom: 74px;
         }
 
         body.list-mode #view-scanner { display: none; }
         body.list-mode #view-list { display: flex; }
 
         .list-toolbar {
-            padding: 12px 16px 8px;
+            padding: 10px 16px;
             background: var(--card-bg);
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
         }
 
         .search-box {
+            flex: 1;
             display: flex;
             align-items: center;
             background: var(--bg-light);
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 8px 12px;
             gap: 8px;
         }
@@ -299,25 +315,22 @@
             color: var(--text-main);
         }
 
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
         .btn-refresh {
             background: var(--primary-light);
             color: var(--primary);
             border: none;
-            padding: 5px 12px;
-            border-radius: 14px;
-            font-size: 12px;
-            font-weight: 600;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            flex-shrink: 0;
         }
+
+        .btn-refresh:active { transform: scale(0.94); }
 
         .user-list {
             flex: 1;
@@ -329,11 +342,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 14px;
+            padding: 11px 14px;
             margin-bottom: 8px;
-            border-radius: 14px;
+            border-radius: 12px;
             background: var(--card-bg);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
             border: 1.5px solid transparent;
             transition: all 0.2s;
         }
@@ -345,10 +358,10 @@
 
         .user-info-wrapper { display: flex; align-items: center; gap: 12px; }
         .avatar {
-            width: 40px; height: 40px; border-radius: 50%;
+            width: 38px; height: 38px; border-radius: 50%;
             background: var(--primary-light); color: var(--primary);
             display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 15px; flex-shrink: 0;
+            font-weight: 700; font-size: 14px; flex-shrink: 0;
         }
 
         .user-item.active .avatar { background: var(--success); color: #fff; }
@@ -358,9 +371,10 @@
 
         .custom-checkbox {
             position: relative;
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             cursor: pointer;
+            flex-shrink: 0;
         }
         .custom-checkbox input { opacity: 0; width: 0; height: 0; }
         .checkmark {
@@ -376,20 +390,21 @@
         }
         .checkmark:after {
             content: ""; position: absolute; display: none;
-            left: 9px; top: 5px; width: 6px; height: 11px;
+            left: 8px; top: 4px; width: 6px; height: 11px;
             border: solid white; border-width: 0 2.5px 2.5px 0;
             transform: rotate(45deg);
         }
         .custom-checkbox input:checked ~ .checkmark:after { display: block; }
 
-        /* ================= BOTTOM NAVIGATION BAR ================= */
+        /* ================= BOTTOM NAVIGATION BAR (CÂN ĐỐI 50/50) ================= */
         .bottom-nav {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 70px;
+            height: 68px;
             z-index: 35;
-            display: flex;
-            background: rgba(18, 18, 18, 0.85);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(18, 18, 18, 0.88);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -402,12 +417,11 @@
         }
 
         .nav-tab {
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
             background: none;
             border: none;
             color: rgba(255, 255, 255, 0.55);
@@ -421,40 +435,33 @@
         .nav-tab.active { color: #38bdf8; }
         body.list-mode .nav-tab.active { color: var(--primary); }
 
-        .nav-icon { font-size: 20px; }
-        .badge-count {
-            background: var(--success);
-            color: white;
-            font-size: 10px;
-            padding: 1px 6px;
-            border-radius: 10px;
-            margin-left: 4px;
-        }
+        .nav-icon { font-size: 19px; line-height: 1; }
     </style>
 </head>
 <body>
 
-    <!-- THANH CHỌN DANH MỤC & NGÀY -->
+    <!-- THANH TRÊN CÙNG: DANH MỤC + NGÀY + SỐ LƯỢNG CÂN ĐỐI -->
     <div class="top-bar">
-        <div class="top-controls">
-            <div class="select-wrapper">
-                <select id="sheetSelect" onchange="onSheetChange()">
-                    <option>Đang tải danh sách...</option>
-                </select>
-            </div>
-            <div class="date-pill">📅 <span id="todayDisplay">...</span></div>
+        <div class="select-wrapper">
+            <select id="sheetSelect" onchange="onSheetChange()">
+                <option>Đang tải danh sách...</option>
+            </select>
+        </div>
+        <div class="meta-bar">
+            <div class="meta-pill">📅 <span id="todayDisplay">...</span></div>
+            <div class="meta-pill count-pill">✓ Đã điểm danh: <span id="checkedCount">0/0</span></div>
         </div>
     </div>
 
-    <!-- THÔNG BÁO NỔI -->
+    <!-- THÔNG BÁO NỔI (CHỈ HIỆN KHI Ở MÀN QUÉT QR) -->
     <div id="toast-status" class="toast-default"></div>
 
-    <!-- MÀN HÌNH 1: QUÉT MÃ QR KIỂU ZALO -->
+    <!-- MÀN HÌNH 1: QUÉT MÃ QR -->
     <div id="view-scanner">
         <div id="reader"></div>
         
         <div class="scanner-overlay">
-            <div class="scan-hint">Di chuyển camera đến mã QR để điểm danh</div>
+            <div class="scan-hint">Đưa mã QR vào khung hình</div>
             <div class="zalo-frame">
                 <div class="corner corner-tl"></div>
                 <div class="corner corner-tr"></div>
@@ -472,17 +479,14 @@
         <div class="list-toolbar">
             <div class="search-box">
                 <span>🔍</span>
-                <input type="text" id="searchInput" placeholder="Tìm tên..." oninput="renderList()">
+                <input type="text" id="searchInput" placeholder="Tìm theo tên..." oninput="renderList()">
             </div>
-            <div class="stats-bar">
-                <span>Đã có mặt: <strong id="checkedCount" style="color: var(--success);">0/0</strong></span>
-                <button class="btn-refresh" onclick="syncFromServer(true)">🔄 Làm mới</button>
-            </div>
+            <button class="btn-refresh" onclick="syncFromServer(true)" title="Làm mới danh sách">🔄</button>
         </div>
         <div class="user-list" id="userList"></div>
     </div>
 
-    <!-- THANH ĐIỀU HƯỚNG 2 CHẾ ĐỘ -->
+    <!-- THANH ĐIỀU HƯỚNG 2 CHẾ ĐỘ CÂN ĐỐI 50/50 -->
     <div class="bottom-nav">
         <button class="nav-tab active" id="tab-scan" onclick="switchMode('scan')">
             <span class="nav-icon">📷</span>
@@ -490,7 +494,7 @@
         </button>
         <button class="nav-tab" id="tab-list" onclick="switchMode('list')">
             <span class="nav-icon">📋</span>
-            <span>Điểm danh tay <span class="badge-count" id="navBadge">0</span></span>
+            <span>Điểm danh tay</span>
         </button>
     </div>
 
@@ -507,8 +511,19 @@
         let isFetchingUpdates = false;
         let lastWriteTime = 0;
         let toastTimer = null;
+        let currentMode = 'scan';
 
-        const html5QrCode = new Html5Qrcode("reader");
+        // Kích hoạt bộ giải mã QR phần cứng của trình duyệt (nếu có) giúp đọc cực nhạy
+        const html5QrCode = new Html5Qrcode("reader", { 
+            useBarCodeDetectorIfSupported: true,
+            verbose: false 
+        });
+
+        // Chuẩn hóa chuỗi mã QR để loại bỏ dấu cách thừa, ký tự xuống dòng ẩn
+        function normalizeCode(str) {
+            if (str === null || str === undefined) return "";
+            return String(str).replace(/[\r\n\t]+/g, "").trim().toLowerCase();
+        }
 
         function playBeep() {
             try {
@@ -526,10 +541,12 @@
         }
 
         function switchMode(mode) {
+            currentMode = mode;
             if (mode === 'list') {
                 document.body.classList.add('list-mode');
                 document.getElementById('tab-list').classList.add('active');
                 document.getElementById('tab-scan').classList.remove('active');
+                document.getElementById("toast-status").classList.remove('show');
                 renderList();
             } else {
                 document.body.classList.remove('list-mode');
@@ -539,6 +556,9 @@
         }
 
         function showToast(message, type = 'default', duration = 2500) {
+            // Chỉ hiện thông báo khi đang ở chế độ Quét QR
+            if (currentMode !== 'scan') return;
+
             const toast = document.getElementById("toast-status");
             toast.innerText = message;
             toast.className = `show toast-${type}`;
@@ -556,16 +576,16 @@
         }
 
         function updateCounter() {
-            const validUsers = usersData.filter(u => u.id !== "");
+            const validUsers = usersData.filter(u => String(u.id).trim() !== "");
             const checkedUsers = validUsers.filter(u => u.checked);
             document.getElementById("checkedCount").innerText = `${checkedUsers.length}/${validUsers.length}`;
-            document.getElementById("navBadge").innerText = `${checkedUsers.length}/${validUsers.length}`;
         }
 
         function onSheetChange() {
             const select = document.getElementById("sheetSelect");
             currentSheetName = select.value;
             usersData = globalData[currentSheetName] || [];
+            updateCounter();
             renderList();
             showToast(`${currentSheetName}`, "default", 1500);
         }
@@ -590,6 +610,7 @@
                     usersData = globalData[currentSheetName] || [];
                 }
 
+                updateCounter();
                 renderList();
                 startCamera();
                 setInterval(() => syncFromServer(false), AUTO_SYNC_INTERVAL);
@@ -604,7 +625,8 @@
             if (!isManual && document.hidden) return;
 
             isFetchingUpdates = true;
-            if (isManual) showToast("🔄 Đang làm mới...", "loading", 0);
+            const refreshBtn = document.querySelector(".btn-refresh");
+            if (isManual && refreshBtn) refreshBtn.innerText = "⏳";
 
             try {
                 const res = await fetch(SCRIPT_URL);
@@ -618,14 +640,14 @@
 
                 const listEl = document.getElementById("userList");
                 const currentScroll = listEl.scrollTop;
+                updateCounter();
                 renderList();
                 listEl.scrollTop = currentScroll;
-
-                if (isManual) showToast("✅ Đã cập nhật", "success", 1500);
             } catch (err) {
-                if (isManual) showToast("⚠️ Lỗi làm mới dữ liệu!", "error", 3000);
+                console.error(err);
             } finally {
                 isFetchingUpdates = false;
+                if (refreshBtn) refreshBtn.innerText = "🔄";
             }
         }
 
@@ -635,10 +657,10 @@
             container.innerHTML = "";
             updateCounter();
 
-            let displayUsers = usersData.filter(u => u.id !== "");
+            let displayUsers = usersData.filter(u => String(u.id).trim() !== "");
             if (keyword) {
                 displayUsers = displayUsers.filter(u => 
-                    u.name.toLowerCase().includes(keyword) || u.id.toLowerCase().includes(keyword)
+                    u.name.toLowerCase().includes(keyword) || normalizeCode(u.id).includes(keyword)
                 );
             }
             
@@ -670,10 +692,15 @@
             document.getElementById("btn-fallback").style.display = "none";
             document.getElementById("toast-status").classList.remove('show');
 
+            // Không giới hạn qrbox nhỏ nữa để quét được mọi mật độ mã QR trên toàn khung camera
             const config = { 
-                fps: 15, 
-                qrbox: { width: 230, height: 230 },
-                aspectRatio: window.innerHeight / window.innerWidth
+                fps: 15,
+                videoConstraints: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    advanced: [{ focusMode: "continuous" }]
+                }
             };
 
             html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
@@ -686,7 +713,12 @@
         function onScanSuccess(decodedText) {
             if (isProcessing) return; 
 
-            let user = usersData.find(u => u.id === decodedText);
+            const cleanScanned = normalizeCode(decodedText);
+            if (!cleanScanned) return;
+
+            // So sánh đã chuẩn hóa để tránh lỗi dấu cách thừa / chữ hoa thường
+            let user = usersData.find(u => normalizeCode(u.id) === cleanScanned);
+            
             if (user) {
                 if (user.checked) { 
                     showToast(`${user.name}`, "default", 2000); 
@@ -696,20 +728,20 @@
                 isProcessing = true;
                 playBeep();
                 user.checked = true;
+                updateCounter();
                 renderList(); 
                 
-                // Chỉ hiện duy nhất tên người được điểm danh
                 showToast(`${user.name}`, "success", 2500);
                 
-                sendDataToSheet(decodedText, true, user.name);
-                setTimeout(() => { isProcessing = false; }, 1500); 
+                sendDataToSheet(user.id, true);
+                setTimeout(() => { isProcessing = false; }, 1400); 
             } else { 
                 playBeep();
-                showToast(`❌ Mã [${decodedText}] không hợp lệ`, "error", 2500); 
+                showToast(`❌ Mã [${decodedText.trim()}] không hợp lệ`, "error", 2500); 
             }
         }
 
-        function sendDataToSheet(qrCode, isChecked, userName = "") {
+        function sendDataToSheet(qrCode, isChecked) {
             isSyncing = true;
             fetch(SCRIPT_URL, { 
                 method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
@@ -719,19 +751,17 @@
                 lastWriteTime = Date.now();
             }).catch(() => {
                 isSyncing = false;
-                showToast(`⚠️ Lỗi mạng khi lưu: ${userName}`, "error", 3000);
+                showToast(`⚠️ Lỗi mạng khi lưu dữ liệu`, "error", 3000);
             });
         }
 
         function manualCheck(qrCode, isChecked) {
-            let user = usersData.find(u => u.id === qrCode);
+            let user = usersData.find(u => normalizeCode(u.id) === normalizeCode(qrCode));
             if (user) {
                 user.checked = isChecked;
+                updateCounter();
                 renderList();
-                if (isChecked) {
-                    showToast(`${user.name}`, "success", 2000);
-                }
-                sendDataToSheet(qrCode, isChecked, user.name);
+                sendDataToSheet(user.id, isChecked);
             }
         }
 

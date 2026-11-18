@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Điểm Danh QR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Dùng thư viện jsQR siêu nhẹ, bắt nét cực nhanh và chỉ đọc chuẩn QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0068ff;
+            --primary-light: #e5f0ff;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --error: #ef4444;
+            --bg-light: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--text-main);
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* ================= TOP BAR ================= */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.35) 75%, rgba(0, 0, 0, 0) 100%);
+            transition: background 0.25s ease;
+        }
+
+        body.list-mode .top-bar {
+            position: relative;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .select-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            padding: 9px 36px 9px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .select-wrapper select option {
+            background-color: #ffffff;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        body.list-mode .select-wrapper select {
+            background: var(--bg-light);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 10px;
+            color: #fff;
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        body.list-mode .select-wrapper::after {
+            color: var(--primary);
+        }
+
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            color: #f3f4f6;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .meta-pill.count-pill {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: rgba(16, 185, 129, 0.45);
+            color: #6ee7b7;
+        }
+
+        body.list-mode .meta-pill {
+            background: var(--bg-light);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        body.list-mode .meta-pill.count-pill {
+            background: var(--success-bg);
+            color: var(--success);
+            border-color: #a7f3d0;
+        }
+
+        /* ================= VIEW 1: CAMERA TRỰC TIẾP ================= */
+        #view-scanner {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #camera-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #camera-video::-webkit-media-controls,
+        #camera-video::-webkit-media-controls-start-playback-button {
+            display: none !important;
+            -webkit-appearance: none;
+        }
+
+        .scanner-overlay {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            margin-top: -10px;
+        }
+
+        .scan-hint {
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 22px;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 6px 16px;
+            border-radius: 20px;
+        }
+
+        .zalo-frame {
+            width: 245px;
+            height: 245px;
+            position: relative;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.52);
+            border-radius: 24px;
+            transition: transform 0.15s ease;
+        }
+
+        .zalo-frame.detected {
+            transform: scale(1.03);
+        }
+
+        .corner {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-color: #ffffff;
+            border-style: solid;
+            transition: border-color 0.2s;
+        }
+
+        .zalo-frame.detected .corner {
+            border-color: #10b981;
+        }
+
+        .corner-tl {
+            top: -2px;
+            left: -2px;
+            border-width: 4px 0 0 4px;
+            border-top-left-radius: 22px;
+        }
+
+        .corner-tr {
+            top: -2px;
+            right: -2px;
+            border-width: 4px 4px 0 0;
+            border-top-right-radius: 22px;
+        }
+
+        .corner-bl {
+            bottom: -2px;
+            left: -2px;
+            border-width: 0 0 4px 4px;
+            border-bottom-left-radius: 22px;
+        }
+
+        .corner-br {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 4px 4px 0;
+            border-bottom-right-radius: 22px;
+        }
+
+        .scan-laser {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00e5ff, #ffffff, #00e5ff, transparent);
+            box-shadow: 0 0 12px #00e5ff;
+            animation: scanAnim 2s infinite ease-in-out;
+        }
+
+        @keyframes scanAnim {
+            0% {
+                top: 15px;
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            85% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 230px;
+                opacity: 0;
+            }
+        }
+
+        #btn-fallback {
+            position: absolute;
+            z-index: 25;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 104, 255, 0.4);
+            display: none;
+        }
+
+        /* ================= THÔNG BÁO NỔI (CHỈ HIỆN Ở MÀN QUÉT QR) ================= */
+        #toast-status {
+            position: absolute;
+            top: 98px;
+            left: 24px;
+            right: 24px;
+            z-index: 40;
+            padding: 13px 18px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.28);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        body.list-mode #toast-status {
+            display: none !important;
+        }
+
+        #toast-status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-default {
+            background: rgba(30, 41, 59, 0.9);
+            color: #fff;
+            font-size: 14.5px;
+        }
+
+        .toast-success {
+            background: rgba(16, 185, 129, 0.96);
+            color: #fff;
+        }
+
+        .toast-error {
+            background: rgba(239, 68, 68, 0.96);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .toast-loading {
+            background: rgba(0, 104, 255, 0.92);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* ================= VIEW 2: DANH SÁCH & ĐIỂM DANH TAY ================= */
+        #view-list {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            background: var(--bg-light);
+            overflow: hidden;
+            padding-bottom: 74px;
+        }
+
+        body.list-mode #view-scanner {
+            display: none;
+        }
+
+        body.list-mode #view-list {
+            display: flex;
+        }
+
+        .list-toolbar {
+            padding: 10px 16px;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--bg-light);
+            border-radius: 10px;
+            padding: 8px 12px;
+            gap: 8px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .btn-refresh {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 14px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            border: 1.5px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .user-item.active {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .user-info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-item.active .avatar {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .user-name {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-status-text {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .user-item.active .user-status-text {
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .custom-checkbox {
+            position: relative;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            inset: 0;
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .custom-checkbox input:checked~.checkmark {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 8px;
+            top: 4px;
+            width: 6px;
+            height: 11px;
+            border: solid white;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg);
+        }
+
+        .custom-checkbox input:checked~.checkmark:after {
+            display: block;
+        }
+
+        /* ================= BOTTOM NAVIGATION BAR ================= */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            z-index: 35;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(18, 18, 18, 0.88);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        body.list-mode .bottom-nav {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        body.list-mode .nav-tab {
+            color: var(--text-muted);
+        }
+
+        .nav-tab.active {
+            color: #38bdf8;
+        }
+
+        body.list-mode .nav-tab.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 19px;
+            line-height: 1;
+        }
+
+        /* Căn giữa icon SVG trong nút bật camera và thông báo nổi */
+        #btn-fallback {
+            display: none;
+            /* JS sẽ bật sang inline-flex khi cần */
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #toast-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        @keyframes spinIcon {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-refresh.spinning svg {
+            animation: spinIcon 0.8s linear infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- THANH TRÊN CÙNG -->
+    <div class="top-bar">
+        <div class="select-wrapper">
+            <select id="sheetSelect" onchange="onSheetChange()">
+                <option>Đang tải danh sách...</option>
+            </select>
+        </div>
+        <div class="meta-bar">
+            <div class="meta-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span id="todayDisplay">...</span>
+            </div>
+            <div class="meta-pill count-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Đã điểm danh: <span id="checkedCount">0/0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- THÔNG BÁO NỔI (CHỈ HIỆN KHI Ở MÀN QUÉT QR) -->
+    <div id="toast-status" class="toast-default"></div>
+
+    <!-- MÀN HÌNH 1: CAMERA QUÉT MÃ QR -->
+    <div id="view-scanner">
+        <video id="camera-video" playsinline muted></video>
+        <canvas id="scan-canvas" style="display: none;"></canvas>
+
+        <div class="scanner-overlay">
+            <div class="scan-hint">Đưa mã QR vào khung hình</div>
+            <div class="zalo-frame" id="zaloFrame">
+                <div class="corner corner-tl"></div>
+                <div class="corner corner-tr"></div>
+                <div class="corner corner-bl"></div>
+                <div class="corner corner-br"></div>
+                <div class="scan-laser"></div>
+            </div>
+        </div>
+
+        <button id="btn-fallback" onclick="startCamera()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+            </svg>
+            <span>Chạm để bật Camera</span>
+        </button>
+    </div>
+
+    <!-- MÀN HÌNH 2: DANH SÁCH & ĐIỂM DANH TAY -->
+    <div id="view-list">
+        <div class="list-toolbar">
+            <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="searchInput" placeholder="Tìm theo tên..." oninput="renderList()">
+            </div>
+            <button class="btn-refresh" onclick="syncFromServer(true)" title="Làm mới danh sách">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+            </button>
+        </div>
+        <div class="user-list" id="userList"></div>
+    </div>
+
+    <!-- THANH ĐIỀU HƯỚNG 2 CHẾ ĐỘ -->
+    <div class="bottom-nav">
+        <button class="nav-tab active" id="tab-scan" onclick="switchMode('scan')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                <line x1="7" y1="12" x2="17" y2="12" />
+            </svg>
+            <span>Quét mã QR</span>
+        </button>
+        <button class="nav-tab" id="tab-list" onclick="switchMode('list')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            <span>Điểm danh tay</span>
+        </button>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynZL3yuCuF-IutLxNab7yQ_YCE5KcMLcQWbEfSwHMi9AoF_D7BQA8aQDtipM9Z0_Y/exec";
+        const AUTO_SYNC_INTERVAL = 10000;
+
+        let globalData = {};
+        let currentSheetName = "";
+        let usersData = [];
+        let todayDateStr = "";
+        let isProcessing = false;
+        let isSyncing = false;
+        let isFetchingUpdates = false;
+        let lastWriteTime = 0;
+        let toastTimer = null;
+        let currentMode = 'scan';
+
+        // Biến điều khiển luồng quét tốc độ cao
+        let videoStream = null;
+        let scanLoopId = null;
+        let nativeDetector = null;
+        let lastCandidateCode = "";
+        let candidateStreak = 0;
+
+        // Khởi tạo BarcodeDetector phần cứng nếu trình duyệt hỗ trợ (chỉ nhận QR_CODE)
+        if ('BarcodeDetector' in window) {
+            try {
+                nativeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+            } catch (e) { nativeDetector = null; }
+        }
+
+        // Chuẩn hóa chuỗi mã để loại bỏ khoảng trắng, ký tự ẩn
+        function normalizeCode(str) {
+            if (str === null || str === undefined) return "";
+            return String(str).replace(/[\r\n\t\u200B-\u200D\uFEFF]+/g, "").trim().toLowerCase();
+        }
+
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 1050;
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch (e) { }
+            if (navigator.vibrate) navigator.vibrate(90);
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            if (mode === 'list') {
+                document.body.classList.add('list-mode');
+                document.getElementById('tab-list').classList.add('active');
+                document.getElementById('tab-scan').classList.remove('active');
+                document.getElementById("toast-status").classList.remove('show');
+                renderList();
+            } else {
+                document.body.classList.remove('list-mode');
+                document.getElementById('tab-scan').classList.add('active');
+                document.getElementById('tab-list').classList.remove('active');
+                lastCandidateCode = "";
+                candidateStreak = 0;
+            }
+        }
+
+        const TOAST_ICONS = {
+            loading: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>`,
+            error: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+        };
+
+        function showToast(message, type = 'default', duration = 2200) {
+            if (currentMode !== 'scan') return;
+
+            const toast = document.getElementById("toast-status");
+            // Xóa sạch các ký tự emoji/unicode cũ nếu còn sót và chèn SVG 2D
+            const cleanText = message.replace(/^[⌛︎⚠︎❌⚠️\s]+/, '');
+            const iconHtml = TOAST_ICONS[type] || "";
+
+            toast.innerHTML = `${iconHtml}<span>${cleanText}</span>`;
+            toast.className = `show toast-${type}`;
+
+            clearTimeout(toastTimer);
+            if (duration > 0) {
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            }
+        }
+
+        function getInitials(name) {
+            return name && name.trim() !== "" ? name.trim().split(" ").pop().charAt(0).toUpperCase() : "?";
+        }
+
+        function updateCounter() {
+            const validUsers = usersData.filter(u => String(u.id).trim() !== "");
+            const checkedUsers = validUsers.filter(u => u.checked);
+            document.getElementById("checkedCount").innerText = `${checkedUsers.length}/${validUsers.length}`;
+        }
+
+        function onSheetChange() {
+            const select = document.getElementById("sheetSelect");
+            currentSheetName = select.value;
+            usersData = globalData[currentSheetName] || [];
+            updateCounter();
+            renderList();
+            showToast(`${currentSheetName}`, "default", 1500);
+        }
+
+        function loadInitialData() {
+            showToast("⌛︎ Đang tải dữ liệu...", "loading", 0);
+            fetch(SCRIPT_URL).then(res => res.json()).then(data => {
+                todayDateStr = data.today;
+                globalData = data.data;
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+
+                const select = document.getElementById("sheetSelect");
+                select.innerHTML = "";
+                data.sheetNames.forEach(sheet => {
+                    const opt = document.createElement("option");
+                    opt.value = sheet; opt.innerText = sheet;
+                    select.appendChild(opt);
+                });
+
+                if (data.sheetNames.length > 0) {
+                    currentSheetName = data.sheetNames[0];
+                    usersData = globalData[currentSheetName] || [];
+                }
+
+                updateCounter();
+                renderList();
+                startCamera();
+                setInterval(() => syncFromServer(false), AUTO_SYNC_INTERVAL);
+            }).catch(() => {
+                showToast("⚠︎ Lỗi kết nối Google Sheets!", "error", 5000);
+            });
+        }
+
+        async function syncFromServer(isManual = false) {
+            if (isProcessing || isSyncing || isFetchingUpdates) return;
+            if (!isManual && (Date.now() - lastWriteTime < 3000)) return;
+            if (!isManual && document.hidden) return;
+
+            isFetchingUpdates = true;
+            const refreshBtn = document.querySelector(".btn-refresh");
+            if (isManual && refreshBtn) refreshBtn.classList.add("spinning");
+
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                if (isProcessing || isSyncing) { isFetchingUpdates = false; return; }
+
+                todayDateStr = data.today;
+                document.getElementById("todayDisplay").innerText = todayDateStr;
+                globalData = data.data;
+                usersData = globalData[currentSheetName] || [];
+
+                const listEl = document.getElementById("userList");
+                const currentScroll = listEl.scrollTop;
+                updateCounter();
+                renderList();
+                listEl.scrollTop = currentScroll;
+            } catch (err) {
+                console.error(err);
+            } finally {
+                isFetchingUpdates = false;
+                if (refreshBtn) refreshBtn.classList.remove("spinning");
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById("userList");
+            const keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+            container.innerHTML = "";
+            updateCounter();
+
+            let displayUsers = usersData.filter(u => String(u.id).trim() !== "");
+            if (keyword) {
+                displayUsers = displayUsers.filter(u =>
+                    u.name.toLowerCase().includes(keyword) || normalizeCode(u.id).includes(keyword)
+                );
+            }
+
+            if (displayUsers.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 40px 20px; color: var(--text-muted); font-size: 14px;">Không tìm thấy dữ liệu</div>`;
+                return;
+            }
+
+            displayUsers.forEach(user => {
+                const div = document.createElement("div");
+                div.className = `user-item ${user.checked ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="user-info-wrapper">
+                        <div class="avatar">${getInitials(user.name)}</div>
+                        <div>
+                            <div class="user-name">${user.name}</div>
+                            <div class="user-status-text">${user.checked ? 'Đã điểm danh' : 'Chưa điểm danh'}</div>
+                        </div>
+                    </div>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" ${user.checked ? 'checked' : ''} onchange="manualCheck('${user.id}', this.checked)">
+                        <span class="checkmark"></span>
+                    </label>`;
+                container.appendChild(div);
+            });
+        }
+
+        /* ================= HỆ THỐNG QUÉT QR SIÊU NHANH & CHỐNG NHẦM MÃ ================= */
+        async function startCamera() {
+            document.getElementById("btn-fallback").style.display = "none";
+            document.getElementById("toast-status").classList.remove('show');
+
+            const video = document.getElementById("camera-video");
+
+            try {
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                }
+
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        facingMode: { ideal: "environment" },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+
+                video.srcObject = videoStream;
+                await video.play();
+
+                // Bật lấy nét tự động liên tục nếu camera hỗ trợ
+                const track = videoStream.getVideoTracks()[0];
+                if (track && track.getCapabilities) {
+                    const caps = track.getCapabilities();
+                    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+                        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => { });
+                    }
+                }
+
+                startScanLoop();
+            } catch (err) {
+                console.error(err);
+                document.getElementById("btn-fallback").style.display = "inline-flex";
+                showToast("⚠️ Chạm nút giữa màn hình để bật Camera", "error", 4000);
+            }
+        }
+
+        function startScanLoop() {
+            const video = document.getElementById("camera-video");
+            const canvas = document.getElementById("scan-canvas");
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            let lastScanTime = 0;
+
+            async function tick(timestamp) {
+                scanLoopId = requestAnimationFrame(tick);
+
+                // Chỉ quét khi đang ở tab Quét QR, video đã sẵn sàng và không trong thời gian nghỉ sau khi quét
+                if (currentMode !== 'scan' || isProcessing || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    return;
+                }
+
+                // Quét ~20 lần/giây (mỗi 50ms) để cực nhạy mà không làm nóng máy
+                if (timestamp - lastScanTime < 50) return;
+                lastScanTime = timestamp;
+
+                const vw = video.videoWidth;
+                const vh = video.videoHeight;
+                if (!vw || !vh) return;
+
+                // Cắt đúng vùng vuông chính giữa khung hình (tương ứng khung 4 góc trên màn hình)
+                // Giúp tốc độ giải mã cực nhanh và KHÔNG BAO GIỜ quét nhầm mã của người đứng bên cạnh
+                const cropSize = Math.floor(Math.min(vw, vh) * 0.65);
+                const sx = Math.floor((vw - cropSize) / 2);
+                const sy = Math.floor((vh - cropSize) / 2);
+
+                // Thu nhỏ vùng cắt về tối đa 480x480px để jsQR đọc trong < 10ms
+                const targetSize = Math.min(cropSize, 480);
+                if (canvas.width !== targetSize || canvas.height !== targetSize) {
+                    canvas.width = targetSize;
+                    canvas.height = targetSize;
+                }
+
+                ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, targetSize, targetSize);
+
+                let detectedText = null;
+
+                // Ưu tiên 1: Dùng BarcodeDetector phần cứng của trình duyệt (cực nhạy với mọi loại QR)
+                if (nativeDetector) {
+                    try {
+                        const barcodes = await nativeDetector.detect(canvas);
+                        if (barcodes && barcodes.length > 0) {
+                            detectedText = barcodes[0].rawValue;
+                        }
+                    } catch (e) { }
+                }
+
+                // Ưu tiên 2: Dùng jsQR nếu trình duyệt không hỗ trợ BarcodeDetector hoặc chưa bắt được
+                if (!detectedText && typeof jsQR !== 'undefined') {
+                    const imageData = ctx.getImageData(0, 0, targetSize, targetSize);
+                    const code = jsQR(imageData.data, targetSize, targetSize, {
+                        inversionAttempts: "attemptBoth" // Đọc được cả mã QR nền tối chữ sáng lẫn nền trắng chữ đen
+                    });
+                    if (code && code.data) {
+                        detectedText = code.data;
+                    }
+                }
+
+                if (detectedText) {
+                    // Yêu cầu 2 khung hình liên tiếp đọc ra CÙNG 1 MÃ để chống đọc nhầm khi lướt tay
+                    if (detectedText === lastCandidateCode) {
+                        candidateStreak++;
+                        if (candidateStreak >= 2) {
+                            candidateStreak = 0;
+                            lastCandidateCode = "";
+                            onScanSuccess(detectedText);
+                        }
+                    } else {
+                        lastCandidateCode = detectedText;
+                        candidateStreak = 1;
+                    }
+                } else {
+                    candidateStreak = 0;
+                }
+            }
+
+            if (scanLoopId) cancelAnimationFrame(scanLoopId);
+            scanLoopId = requestAnimationFrame(tick);
+        }
+
+        function findUserByQr(rawText) {
+            const clean = normalizeCode(rawText);
+            if (!clean) return null;
+
+            // 1. Khớp chính xác tuyệt đối 100%
+            let exactUser = usersData.find(u => normalizeCode(u.id) === clean);
+            if (exactUser) return exactUser;
+
+            // 2. Nếu mã QR là đường link URL (VD: https://.../exec?id=NV01), tách lấy phần tham số cuối
+            if (clean.includes("http") || clean.includes("?")) {
+                try {
+                    const urlObj = new URL(rawText.trim());
+                    for (const val of urlObj.searchParams.values()) {
+                        const paramUser = usersData.find(u => normalizeCode(u.id) === normalizeCode(val));
+                        if (paramUser) return paramUser;
+                    }
+                } catch (e) { }
+            }
+
+            return null;
+        }
+
+        function onScanSuccess(decodedText) {
+            if (isProcessing) return;
+
+            const frame = document.getElementById("zaloFrame");
+            frame.classList.add("detected");
+            setTimeout(() => frame.classList.remove("detected"), 350);
+
+            let user = findUserByQr(decodedText);
+
+            if (user) {
+                if (user.checked) {
+                    isProcessing = true;
+                    showToast(`${user.name}`, "default", 1800);
+                    setTimeout(() => { isProcessing = false; }, 1200);
+                    return;
+                }
+
+                isProcessing = true;
+                playBeep();
+                user.checked = true;
+                updateCounter();
+                renderList();
+
+                showToast(`${user.name}`, "success", 2200);
+
+                sendDataToSheet(user.id, true);
+                setTimeout(() => { isProcessing = false; }, 1200);
+            } else {
+                isProcessing = true;
+                playBeep();
+                showToast(`❌ Mã [${decodedText.trim()}] không hợp lệ`, "error", 2200);
+                setTimeout(() => { isProcessing = false; }, 1200);
+            }
+        }
+
+        function sendDataToSheet(qrCode, isChecked) {
+            isSyncing = true;
+            fetch(SCRIPT_URL, {
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ qrCode: qrCode, checked: isChecked, sheetName: currentSheetName })
+            }).then(() => {
+                isSyncing = false;
+                lastWriteTime = Date.now();
+            }).catch(() => {
+                isSyncing = false;
+                showToast(`⚠️ Lỗi mạng khi lưu dữ liệu`, "error", 3000);
+            });
+        }
+
+        function manualCheck(qrCode, isChecked) {
+            let user = usersData.find(u => normalizeCode(u.id) === normalizeCode(qrCode));
+            if (user) {
+                user.checked = isChecked;
+                updateCounter();
+                renderList();
+                sendDataToSheet(user.id, isChecked);
+            }
+        }
+
+        loadInitialData();
+    </script>
+</body>
+
+</html>

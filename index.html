@@ -747,17 +747,46 @@
             return String(str).replace(/[\r\n\t\u200B-\u200D\uFEFF]+/g, "").trim().toLowerCase();
         }
 
+        let sharedAudioCtx = null;
+
+        function unlockAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+                if (sharedAudioCtx.state === 'suspended') {
+                    sharedAudioCtx.resume();
+                }
+            } catch (e) { }
+        }
+
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
+
         function playBeep() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+                if (sharedAudioCtx.state === 'suspended') {
+                    sharedAudioCtx.resume();
+                }
+
+                const now = sharedAudioCtx.currentTime;
+                const osc = sharedAudioCtx.createOscillator();
+                const gain = sharedAudioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1050, now);
+
+                gain.gain.setValueAtTime(0.45, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
                 osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.value = 1050;
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.1);
+                gain.connect(sharedAudioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.14);
             } catch (e) { }
             if (navigator.vibrate) navigator.vibrate(90);
         }
